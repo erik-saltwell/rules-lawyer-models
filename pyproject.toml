@@ -31,7 +31,7 @@ testpaths = ["tests/unit"]
 addopts = "-q -s"
 
 [tool.ruff]
-target-version = "py31114"
+target-version = "py311"
 line-length = 120
 
 [tool.ruff.lint]

@@ -1,0 +1,30 @@
+services:
+  rules-lawyer-models:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    image: rules-lawyer-models:cu128-py31114
+    working_dir: /workspace
+    volumes:
+      - ./:/workspace
+      - uv_cache:/root/.cache/uv
+      - pip_cache:/root/.cache/pip
+      - hf_cache:/root/.cache/huggingface
+    environment:
+      - HF_HOME=/root/.cache/huggingface
+      - UV_PROJECT_ENVIRONMENT=/opt/venv
+    shm_size: "8gb"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - capabilities: [gpu]
+    command: ["sleep", "infinity"]
+    tty: true
+    stdin_open: true
+
+
+volumes:
+  uv_cache:
+  pip_cache:
+  hf_cache:

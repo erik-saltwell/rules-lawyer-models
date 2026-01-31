@@ -1,0 +1,27 @@
+{
+  "name": "rules-lawyer-models (CUDA 12.8 / PyTorch cu128 / Python 3.11.14)",
+  "dockerComposeFile": [
+    "../compose.yaml"
+  ],
+  "service": "rules-lawyer-models",
+  "workspaceFolder": "/workspace",
+  "workspaceMountConsistency": "consistent",
+  "remoteEnv": {
+    "VIRTUAL_ENV": "/opt/venv",
+    "UV_PROJECT_ENVIRONMENT": "/opt/venv",
+    "PATH": "/opt/venv/bin:${containerEnv:PATH}"
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-toolsai.jupyter",
+        "ms-azuretools.vscode-docker"
+      ],
+      "settings": {
+        "python.defaultInterpreterPath": "/opt/venv/bin/python",
+        "terminal.integrated.defaultProfile.linux": "bash"
+      }
+    }
+  }
+}
