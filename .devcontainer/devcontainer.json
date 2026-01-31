@@ -1,9 +1,5 @@
 {
   "name": "rules-lawyer-models (CUDA 12.8 / PyTorch cu128 / Python 3.11.14)",
-  "build": {
-    "dockerfile": "../docker/Dockerfile",
-    "context": ".."
-  },
   "dockerComposeFile": [
     "../compose.yaml"
   ],

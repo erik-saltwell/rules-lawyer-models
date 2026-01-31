@@ -82,6 +82,9 @@ def main() -> int:
     print("Extracted install command:", flush=True)
     print(cmdline, flush=True)
 
+    # Ensure basic build tooling exists (uv venv can be minimal; --no-build-isolation needs these)
+    _run(["uv", "pip", "install", "--upgrade", "setuptools", "wheel"])
+
     # Execute each segment via `uv pip ...` to avoid requiring the `pip` module in the venv.
     # The upstream command is usually a chain joined by `&&`.
     segments = [seg.strip() for seg in cmdline.split("&&") if seg.strip()]
@@ -96,7 +99,22 @@ def main() -> int:
         _run(argv)
 
     # Smoke test
-    _run([sys.executable, "-c", "import unsloth, unsloth_zoo; print('unsloth import OK')"])
+    smoke = r"""
+import importlib.metadata as md
+import torch
+
+print("unsloth dist:", md.version("unsloth"))
+print("unsloth-zoo dist:", md.version("unsloth-zoo"))
+print("torch cuda available:", torch.cuda.is_available())
+
+# Only import the runtime modules if a GPU is visible.
+if torch.cuda.is_available():
+    import unsloth, unsloth_zoo
+    print("unsloth runtime import OK")
+else:
+    print("Skipping unsloth runtime import (no GPU visible during build).")
+"""
+    _run([sys.executable, "-c", smoke])
 
     # Cleanup
     try:
