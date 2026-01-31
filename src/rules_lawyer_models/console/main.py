@@ -23,7 +23,7 @@ app = typer.Typer(
 
 @app.command("test")
 def test() -> None:
-    """Simple test command."""
+    """Simple smoke command."""
     console = Console()
     console.print("[green]Hello from test[/green]")
 
