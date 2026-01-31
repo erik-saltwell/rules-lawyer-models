@@ -17,7 +17,6 @@
     "UV_PROJECT_ENVIRONMENT": "/opt/venv",
     "PATH": "/opt/venv/bin:${containerEnv:PATH}"
   },
-  "postCreateCommand": "git config --global user.name \"Erik Saltwell\" && git config --global user.email \"erik.saltwell@gmail.com\" && git config --global gpg.format ssh && git config --global commit.gpgsign true && git config --global user.signingkey /root/.ssh/git_signing_key.pub && git config --global gpg.ssh.allowedSignersFile /root/.ssh/allowed_signers && uv sync --frozen --inexact",
   "customizations": {
     "vscode": {
       "extensions": [
