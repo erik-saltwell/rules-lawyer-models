@@ -8,7 +8,8 @@
   "workspaceMountConsistency": "consistent",
   "mounts": [
     "source=${localEnv:HOME}/.1password/agent.sock,target=/ssh-agent,type=bind",
-    "source=${localEnv:HOME}/.ssh/git_signing_key.pub,target=/root/.ssh/git_signing_key.pub,type=bind,readonly"
+    "source=${localEnv:HOME}/.ssh/git_signing_key.pub,target=/root/.ssh/git_signing_key.pub,type=bind,readonly",
+    "source=${localWorkspaceFolder}/.devcontainer/allowed_signers,target=/root/.ssh/allowed_signers,type=bind,readonly"
   ],
   "remoteEnv": {
     "SSH_AUTH_SOCK": "/ssh-agent",
@@ -16,6 +17,7 @@
     "UV_PROJECT_ENVIRONMENT": "/opt/venv",
     "PATH": "/opt/venv/bin:${containerEnv:PATH}"
   },
+  "postCreateCommand": "git config --global gpg.ssh.allowedSignersFile /root/.ssh/allowed_signers && uv sync --frozen --inexact",
   "customizations": {
     "vscode": {
       "extensions": [
