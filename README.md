@@ -72,26 +72,92 @@ This is an example of how to list things you need to use the software and how to
   npm install npm@latest -g
   ```
 
-### Installation
 
-1. Get a free API Key at [https://example.com](https://example.com)
-2. Clone the repo
-   ```sh
-   git clone https://github.com/github_username/repo_name.git
+### VS Code Dev Container Quickstart (after cloning)
+
+This repo is set up to run inside a VS Code **Dev Container**, backed by **Docker Compose**. The container creates/uses a Python virtual environment at `/opt/venv` and runs `uv sync --frozen --inexact` automatically on first create, so you can start working immediately inside the container.
+
+#### Prerequisites (one-time)
+
+1. Install:
+
+   * Docker Engine + Docker Compose
+   * VS Code
+   * VS Code extension: **Dev Containers**
+2. If you want GPU acceleration locally:
+
+   * Install NVIDIA drivers and ensure Docker can access the GPU (e.g., `nvidia-smi` works on the host).
+
+> Note: This devcontainer configuration binds a 1Password SSH agent socket and SSH signing-related files from `.devcontainer/`. If you don’t use 1Password SSH agent or SSH commit signing, you may need to comment out or adjust those mounts in `.devcontainer/devcontainer.json` before opening in the container.
+
+#### Open the project in the container
+
+1. Clone and open the folder in VS Code:
+
+   ```bash
+   git clone <your-repo-url>
+   cd rules-lawyer-models
+   code .
    ```
-3. Install NPM packages
-   ```sh
-   npm install
-   ```
-4. Enter your API in `config.js`
-   ```js
-   const API_KEY = 'ENTER YOUR API';
-   ```
-5. Change git remote url to avoid accidental pushes to base project
-   ```sh
-   git remote set-url origin github_username/repo_name
-   git remote -v # confirm the changes
-   ```
+
+2. In VS Code, open the Command Palette:
+
+   * **Dev Containers: Reopen in Container**
+
+VS Code will build the image (if needed), start the Compose service, mount your workspace into `/workspace`, and run the configured `postCreateCommand` (including `uv sync`).
+
+#### Validate the environment (inside the container terminal)
+
+Run these in the VS Code terminal (which should now be “inside” the container):
+
+```bash
+python -V
+which python
+uv --version
+```
+
+GPU check (optional):
+
+```bash
+nvidia-smi
+python -c "import torch; print(torch.cuda.is_available())"
+```
+
+Repo sanity check:
+
+```bash
+uv run pytest
+```
+
+(These checks match the intended “golden workflow” for this environment.)
+
+#### Daily development loop
+
+* Edit files normally in VS Code (they live on your host and are mounted into the container).
+* Run code/tests in the container terminal:
+
+  ```bash
+  uv run pytest
+  uv run python -m <your_module_here>
+  ```
+
+No rebuild is needed for normal code changes.
+
+#### When you *do* need to rebuild
+
+* If you changed dependencies (`pyproject.toml` / `uv.lock`) or anything in the container configuration:
+
+  * VS Code Command Palette → **Dev Containers: Rebuild Container**
+  * Or, from a host terminal:
+
+    ```bash
+    docker compose build
+    ```
+
+This setup is designed so dependency changes rebuild the relevant layers, while day-to-day code edits do not require rebuilding.
+
+---
+
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
