@@ -8,7 +8,7 @@
   "workspaceMountConsistency": "consistent",
   "mounts": [
     "source=${localEnv:HOME}/.1password/agent.sock,target=/ssh-agent,type=bind",
-    "source=${localEnv:HOME}/.ssh/git_signing_key.pub,target=/root/.ssh/git_signing_key.pub,type=bind,readonly",
+    "source=${localWorkspaceFolder}/.devcontainer/git_signing_key.pub,target=/root/.ssh/git_signing_key.pub,type=bind,readonly",
     "source=${localWorkspaceFolder}/.devcontainer/allowed_signers,target=/root/.ssh/allowed_signers,type=bind,readonly"
   ],
   "remoteEnv": {
@@ -17,6 +17,7 @@
     "UV_PROJECT_ENVIRONMENT": "/opt/venv",
     "PATH": "/opt/venv/bin:${containerEnv:PATH}"
   },
+  "postCreateCommand": "mkdir -p /root/.ssh && git config --global user.name \"Erik Saltwell\" && git config --global user.email \"erik.saltwell@gmail.com\" && git config --global gpg.format ssh && git config --global commit.gpgsign true && git config --global user.signingkey /root/.ssh/git_signing_key.pub && git config --global gpg.ssh.allowedSignersFile /root/.ssh/allowed_signers && uv sync --frozen --inexact",
   "customizations": {
     "vscode": {
       "extensions": [
