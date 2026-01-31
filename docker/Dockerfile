@@ -5,7 +5,7 @@ FROM ${CUDA_BASE_IMAGE}
 # Minimal OS tools + micro editor (plus tini for correct signal handling)
 RUN --mount=type=cache,target=/var/cache/apt \
     apt-get update && apt-get install -y --no-install-recommends \
-      ca-certificates git tini micro \
+    ca-certificates git openssh-client tini micro \
     && rm -rf /var/lib/apt/lists/*
 
 # Install uv by copying the binaries from Astral’s official image
@@ -31,8 +31,8 @@ ENV PATH="${VIRTUAL_ENV}/bin:${PATH}"
 RUN --mount=type=cache,target=/root/.cache/uv \
     --mount=type=cache,target=/root/.cache/pip \
     uv pip install \
-      torch==2.9.0 torchvision==0.24.0 torchaudio==2.9.0 \
-      --index-url https://download.pytorch.org/whl/cu128
+    torch==2.9.0 torchvision==0.24.0 torchaudio==2.9.0 \
+    --index-url https://download.pytorch.org/whl/cu128
 
 # Install project deps from lock file only (cache-friendly)
 COPY pyproject.toml uv.lock ./
