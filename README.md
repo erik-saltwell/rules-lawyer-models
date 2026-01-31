@@ -158,6 +158,54 @@ This setup is designed so dependency changes rebuild the relevant layers, while 
 
 ---
 
+## Dependency syncing (uv)
+
+This repo uses **uv** + **uv.lock** for Python dependencies.
+
+### The safe sync command (inside the container)
+
+Inside the dev container, run:
+
+```bash
+uv-shell
+```
+
+This executes:
+
+```bash
+uv sync --frozen --inexact
+```
+
+- `--frozen` prevents modifying `uv.lock`
+- `--inexact` prevents uninstalling packages that are not in the lockfile (important for platform-ish packages)
+
+> Note: `uv-shell` is installed in the container image and is intended to be run from anywhere within the git checkout.
+
+### Why `uv sync` is blocked
+
+In interactive shells inside the container, **`uv sync` is intentionally blocked** to reduce the risk of accidentally removing “platform” packages that aren’t fully represented in the lockfile.
+
+If you truly need to run it anyway (not recommended), you can override:
+
+```bash
+UV_ALLOW_SYNC=1 uv sync ...
+```
+
+### Syncing outside the container
+
+If you want to do the same safe sync on a host machine that has `uv` installed, run:
+
+```bash
+./.scripts/do_sync.sh
+```
+
+That script runs the same command:
+
+```bash
+uv sync --frozen --inexact
+```
+
+
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 

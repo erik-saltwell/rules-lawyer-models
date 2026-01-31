@@ -3,6 +3,8 @@ services:
     build:
       context: .
       dockerfile: docker/Dockerfile
+      args:
+        UNSLOTH_INSTALLER_REF: "main"
     image: rules-lawyer-models:cu128-py31114
     working_dir: /workspace
     volumes:
@@ -18,11 +20,10 @@ services:
       resources:
         reservations:
           devices:
-            - capabilities: [gpu]
-    command: ["sleep", "infinity"]
+            - capabilities: [ gpu ]
+    command: [ "sleep", "infinity" ]
     tty: true
     stdin_open: true
-
 
 volumes:
   uv_cache:
