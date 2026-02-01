@@ -5,14 +5,30 @@ from __future__ import annotations
 from importlib.metadata import PackageNotFoundError, metadata
 from importlib.metadata import version as dist_version
 
+import click
 import typer
 from dotenv import load_dotenv
 from rich.console import Console
 
+import rules_lawyer_models.console.console_validation as checks
 from rules_lawyer_models.utils.logging_config import configure_logging
 
 load_dotenv()
 configure_logging()
+
+
+def current_command_name() -> str:
+    ctx = click.get_current_context()
+    assert ctx.command.name is not None
+    return ctx.command.name
+
+
+def check_all_erors(errors: list[str], console: Console) -> None:
+    if errors:
+        for error in errors:
+            console.print(f"[red]Error:[/red] {error}")
+        raise typer.Exit(code=1)
+
 
 app = typer.Typer(
     name="rules-lawyer-models",
@@ -24,8 +40,26 @@ app = typer.Typer(
 @app.command("test")
 def test() -> None:
     """Simple smoke test command."""
+    from rules_lawyer_models.core.loaders import load_tokenizer
+    from rules_lawyer_models.utils.base_model_name import BaseModelName
+
+    tmp = load_tokenizer(BaseModelName.QWEN_25_14B_4BIT_BASE)
+    ty = type(tmp)
+    print(f"Loaded tokenizer of type: {ty}")
     console = Console()
     console.print("[green]Hello from test[/green]")
+
+
+@app.command("reddit-rpg-post-classifier")
+def reddit_rpg_post_classifier() -> None:
+    console = Console()
+    console.print("[green]Hello from test[/green]")
+    errors: list[str] = []
+
+    model_name: str = current_command_name().replace("-", "_")
+    errors.extend(checks._validate_directory_name(model_name))
+
+    check_all_erors(errors, console)
 
 
 def _version_callback(value: bool) -> None:

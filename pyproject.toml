@@ -7,7 +7,12 @@ authors = [
     { name = "Erik Saltwell", email = "erik.saltwell@gmail.com" },
 ]
 requires-python = ">=3.11.14"
-dependencies = ["python-dotenv>=1.2.1", "rich>=14.2.0", "typer>=0.21.1"]
+dependencies = [
+    "datasets>=4.5.0",
+    "python-dotenv>=1.2.1",
+    "rich>=14.2.0",
+    "typer>=0.21.1",
+]
 
 [project.scripts]
 rules-lawyer-models = "rules_lawyer_models.console:main.app"
