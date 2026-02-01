@@ -16,15 +16,9 @@ services:
     environment:
       - HF_HOME=/home/dev/.cache/huggingface
       - UV_PROJECT_ENVIRONMENT=/opt/venv
-    shm_size: "8gb"
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - capabilities: [ gpu ]
-            - driver: nvidia
-              count: 1
-              capabilities: [ gpu ]
+    # Modern Docker Compose GPU enablement (works with nvidia-container-toolkit)
+    gpus: all
+
     command: [ "sleep", "infinity" ]
     tty: true
     stdin_open: true
