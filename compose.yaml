@@ -9,12 +9,12 @@ services:
     working_dir: /workspace
     volumes:
       - ./:/workspace
-      - uv_cache:/root/.cache/uv
-      - pip_cache:/root/.cache/pip
-      - hf_cache:/root/.cache/huggingface
-      - unsloth_compiled_cache:/workspace/unsloth_compiled_cache
+      - ${HOME}/.cache/uv:/home/dev/.cache/uv
+      - ${HOME}/.cache/pip:/home/dev/.cache/pip
+      - ${HOME}/.cache/huggingface:/home/dev/.cache/huggingface
+      - ${HOME}/.cache/unsloth_compiled_cache:/workspace/unsloth_compiled_cache
     environment:
-      - HF_HOME=/root/.cache/huggingface
+      - HF_HOME=/home/dev/.cache/huggingface
       - UV_PROJECT_ENVIRONMENT=/opt/venv
     shm_size: "8gb"
     deploy:
@@ -25,9 +25,3 @@ services:
     command: [ "sleep", "infinity" ]
     tty: true
     stdin_open: true
-
-volumes:
-  uv_cache:
-  pip_cache:
-  hf_cache:
-  unsloth_compiled_cache:
