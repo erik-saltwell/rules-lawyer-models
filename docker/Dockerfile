@@ -8,8 +8,15 @@ ARG UNSLOTH_INSTALLER_REF=main
 # Minimal OS tools + micro editor (plus tini for correct signal handling)
 RUN --mount=type=cache,target=/var/cache/apt \
     apt-get update && apt-get install -y --no-install-recommends \
-    ca-certificates git openssh-client wget build-essential python3-dev pkg-config curl tini micro \
+    ca-certificates git openssh-client wget build-essential locales python3-dev pkg-config curl tini micro \
     && rm -rf /var/lib/apt/lists/*
+
+RUN sed -i 's/^# *\(en_US.UTF-8 UTF-8\)/\1/' /etc/locale.gen \
+    && locale-gen
+
+ENV LANG=en_US.UTF-8 \
+    LC_ALL=en_US.UTF-8
+
 
 # Install uv by copying the binaries from Astral’s official image
 # Best practice: pin this tag later (instead of :latest) once you're happy.

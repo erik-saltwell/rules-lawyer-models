@@ -13,6 +13,8 @@ services:
       - ${HOME}/.cache/pip:/home/dev/.cache/pip
       - ${HOME}/.cache/huggingface:/home/dev/.cache/huggingface
       - ${HOME}/.cache/unsloth_compiled_cache:/workspace/unsloth_compiled_cache
+      - ${HOME}/.cache/ruff:/home/dev/.cache/ruff
+      - ${HOME}/.cache/pre-commit:/home/dev/.cache/pre-commit
     environment:
       - HF_HOME=/home/dev/.cache/huggingface
       - UV_PROJECT_ENVIRONMENT=/opt/venv

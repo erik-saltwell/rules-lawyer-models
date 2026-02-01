@@ -31,6 +31,7 @@ testpaths = ["tests/unit"]
 addopts = "-q -s"
 
 [tool.ruff]
+cache-dir = "~/.cache/ruff"
 target-version = "py311"
 line-length = 120
 
@@ -63,3 +64,4 @@ ignore_missing_imports = true
 # Nice for CLI apps with a src/ layout
 mypy_path = ["src"]
 packages = ["rules_lawyer_models"]
+
