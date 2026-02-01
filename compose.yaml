@@ -22,6 +22,9 @@ services:
         reservations:
           devices:
             - capabilities: [ gpu ]
+            - driver: nvidia
+              count: 1
+              capabilities: [ gpu ]
     command: [ "sleep", "infinity" ]
     tty: true
     stdin_open: true
