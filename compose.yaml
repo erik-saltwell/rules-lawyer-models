@@ -12,6 +12,7 @@ services:
       - uv_cache:/root/.cache/uv
       - pip_cache:/root/.cache/pip
       - hf_cache:/root/.cache/huggingface
+      - unsloth_compiled_cache:/workspace/unsloth_compiled_cache
     environment:
       - HF_HOME=/root/.cache/huggingface
       - UV_PROJECT_ENVIRONMENT=/opt/venv
@@ -29,3 +30,4 @@ volumes:
   uv_cache:
   pip_cache:
   hf_cache:
+  unsloth_compiled_cache:
