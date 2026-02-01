@@ -13,7 +13,7 @@ RUN --mount=type=cache,target=/var/cache/apt \
 
 # Install uv by copying the binaries from Astral’s official image
 # Best practice: pin this tag later (instead of :latest) once you're happy.
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+COPY --from=ghcr.io/astral-sh/uv:0.9.28 /uv /uvx /bin/
 
 # Project conventions + uv behavior in containers (build-time defaults)
 ENV WORKDIR=/workspace \
