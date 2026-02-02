@@ -23,6 +23,7 @@ class RunContext(LoggingProtocol):
     model_name: str
     base_model_name: BaseModelName
     dataset_name: DatasetName
+    seed: int = 3817
     common_paths: CommonPaths.ModelPaths = field(init=False)
     _console: Console = field(default_factory=Console)
 

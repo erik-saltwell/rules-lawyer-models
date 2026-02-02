@@ -57,6 +57,7 @@ dependencies = [
     "xformers==0.0.33.post1",
     "unsloth-zoo==2026.1.4",
     "unsloth==2026.1.4",
+    "click>=8.3.1",
 ]
 
 [project.scripts]
