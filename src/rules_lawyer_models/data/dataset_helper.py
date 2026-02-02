@@ -1,8 +1,10 @@
 from __future__ import annotations
 
-from datasets import DatasetDict
+from datasets import Dataset, DatasetDict
+from transformers import PreTrainedTokenizerBase
 
 from rules_lawyer_models.core.run_context import RunContext
+from rules_lawyer_models.exploration.token_length import compute_tokens
 
 
 def split_dataset(
@@ -50,3 +52,28 @@ def split_dataset(
         }
     )
     return splits
+
+
+def make_stress_split(
+    dataset: Dataset,
+    number_of_rows: int,
+    text_column_name: str,
+    tokenizer: PreTrainedTokenizerBase,
+) -> Dataset:
+    """Return a subset containing the rows with the longest token counts.
+
+    Args:
+        dataset: The source dataset.
+        number_of_rows: How many rows to keep.
+        text_column_name: The column containing text to measure.
+        tokenizer: Tokenizer used to count tokens.
+
+    Returns:
+        A Dataset with the top *number_of_rows* rows sorted by descending token count.
+    """
+    token_counts = [compute_tokens(text, tokenizer) for text in dataset[text_column_name]]
+    dataset = dataset.add_column("_token_count", token_counts, new_fingerprint=f"{dataset._fingerprint}_token_count")
+    dataset = dataset.sort("_token_count", reverse=True)
+    dataset = dataset.select(range(min(number_of_rows, len(dataset))))
+    dataset = dataset.remove_columns("_token_count")
+    return dataset

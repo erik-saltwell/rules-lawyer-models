@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 from datasets import ClassLabel, Dataset, DatasetDict, Features, Value
 
-from rules_lawyer_models.data.dataset_helper import split_dataset
+from rules_lawyer_models.data.dataset_helper import make_stress_split, split_dataset
 
 
 @pytest.fixture()
@@ -72,3 +72,34 @@ class TestSplitDataset:
                     f"Split '{split_name}': data_type {label} ratio {actual_ratio:.3f} "
                     f"deviates from expected {expected_ratio:.3f}"
                 )
+
+
+def _word_count(text: str, _tokenizer: object) -> int:
+    return len(text.split())
+
+
+class TestMakeStressSplit:
+    @patch("rules_lawyer_models.data.dataset_helper.compute_tokens", side_effect=_word_count)
+    def test_returns_largest_rows(self, _mock_compute) -> None:
+        texts = [
+            "one",  # 1 word
+            "one two three four",  # 4 words
+            "one two",  # 2 words
+            "one two three",  # 3 words
+            "one two three four five",  # 5 words
+        ]
+        ds = Dataset.from_dict({"text": texts, "id": list(range(len(texts)))})
+
+        result = make_stress_split(ds, number_of_rows=3, text_column_name="text", tokenizer=None)
+
+        assert len(result) == 3
+        assert list(result["id"]) == [4, 1, 3]
+
+    @patch("rules_lawyer_models.data.dataset_helper.compute_tokens", side_effect=_word_count)
+    def test_request_more_than_available(self, _mock_compute) -> None:
+        ds = Dataset.from_dict({"text": ["a b", "a"], "id": [0, 1]})
+
+        result = make_stress_split(ds, number_of_rows=10, text_column_name="text", tokenizer=None)
+
+        assert len(result) == 2
+        assert list(result["id"]) == [0, 1]
