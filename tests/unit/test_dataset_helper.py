@@ -80,7 +80,7 @@ def _word_count(text: str, _tokenizer: object) -> int:
 
 class TestMakeStressSplit:
     @patch("rules_lawyer_models.data.dataset_helper.compute_tokens", side_effect=_word_count)
-    def test_returns_largest_rows(self, _mock_compute) -> None:
+    def test_returns_largest_rows(self, _mock_compute: MagicMock) -> None:
         texts = [
             "one",  # 1 word
             "one two three four",  # 4 words
@@ -90,16 +90,16 @@ class TestMakeStressSplit:
         ]
         ds = Dataset.from_dict({"text": texts, "id": list(range(len(texts)))})
 
-        result = make_stress_split(ds, number_of_rows=3, text_column_name="text", tokenizer=None)
+        result = make_stress_split(ds, number_of_rows=3, text_column_name="text", tokenizer=MagicMock())
 
         assert len(result) == 3
         assert list(result["id"]) == [4, 1, 3]
 
     @patch("rules_lawyer_models.data.dataset_helper.compute_tokens", side_effect=_word_count)
-    def test_request_more_than_available(self, _mock_compute) -> None:
+    def test_request_more_than_available(self, _mock_compute: MagicMock) -> None:
         ds = Dataset.from_dict({"text": ["a b", "a"], "id": [0, 1]})
 
-        result = make_stress_split(ds, number_of_rows=10, text_column_name="text", tokenizer=None)
+        result = make_stress_split(ds, number_of_rows=10, text_column_name="text", tokenizer=MagicMock())
 
         assert len(result) == 2
         assert list(result["id"]) == [0, 1]

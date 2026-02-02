@@ -24,11 +24,11 @@ class RunContext(LoggingProtocol):
     base_model_name: BaseModelName
     dataset_name: DatasetName
     seed: int = 3817
-    common_paths: CommonPaths.ModelPaths = field(init=False)
+    common_paths: CommonPaths = field(init=False)
     _console: Console = field(default_factory=Console)
 
     def __post_init__(self) -> None:
-        self.common_paths = CommonPaths.ModelPaths(model_name=self.model_name)
+        self.common_paths = CommonPaths(model_name=self.model_name)
         self.common_paths.ensure_all_dirs_exist()
 
     def report_message(self, message: str) -> None:
