@@ -1,8 +1,7 @@
-from rules_lawyer_models.commands import RunContext
+from transformers import PreTrainedTokenizerBase
 
 
-def compute_tokens(text: str, ctxt: RunContext) -> int:
+def compute_tokens(text: str, tokenizer: PreTrainedTokenizerBase) -> int:
     """Compute the number of tokens in the given text."""
     # Simple whitespace-based tokenization for demonstration purposes.
-    tokens = text.split()
-    return len(tokens)
+    return len(tokenizer.tokenize(text))

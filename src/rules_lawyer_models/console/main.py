@@ -1,5 +1,4 @@
 # src/reddit_rpg_miner/cli/main.py
-
 from __future__ import annotations
 
 from importlib.metadata import PackageNotFoundError, metadata
@@ -40,14 +39,17 @@ app = typer.Typer(
 @app.command("test")
 def test() -> None:
     """Simple smoke test command."""
+    from transformers import PreTrainedTokenizerBase
+
     from rules_lawyer_models.core.loaders import load_tokenizer
+    from rules_lawyer_models.exploration.token_length import compute_tokens
     from rules_lawyer_models.utils.base_model_name import BaseModelName
 
-    tmp = load_tokenizer(BaseModelName.QWEN_25_14B_4BIT_BASE)
-    ty = type(tmp)
-    print(f"Loaded tokenizer of type: {ty}")
-    console = Console()
-    console.print("[green]Hello from test[/green]")
+    tokenizer: PreTrainedTokenizerBase = load_tokenizer(BaseModelName.QWEN_25_14B_4BIT_BASE)
+    other_count = compute_tokens("Other", tokenizer)
+    reules_question_count = compute_tokens("Question", tokenizer)
+    print(f"Other token count: {other_count}")
+    print(f"Rules Question token count: {reules_question_count}")
 
 
 @app.command("reddit-rpg-post-classifier")

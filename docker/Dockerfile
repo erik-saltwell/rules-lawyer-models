@@ -41,12 +41,18 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 ENV VIRTUAL_ENV=/opt/venv
 ENV PATH="${VIRTUAL_ENV}/bin:${PATH}"
 
-# Install PyTorch (CUDA 12.8 build) as a platform-level dependency
+#upgrade pip
+RUN --mount=type=cache,target=/root/.cache/uv \
+    --mount=type=cache,target=/root/.cache/pip \
+    uv pip install --upgrade pip
+
+# Install PyTorch + torchvision (CUDA 12.8 wheels)
 RUN --mount=type=cache,target=/root/.cache/uv \
     --mount=type=cache,target=/root/.cache/pip \
     uv pip install \
-    torch==2.9.0 torchvision==0.24.0 torchaudio==2.9.0 \
-    --index-url https://download.pytorch.org/whl/cu128
+      "torch==2.9.0+cu128" \
+      "torchvision==0.24.0+cu128" \
+      --index-url https://download.pytorch.org/whl/cu128
 
 # Install project deps from lock file only (cache-friendly)
 COPY pyproject.toml uv.lock ./
@@ -56,14 +62,9 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     --mount=type=cache,target=/root/.cache/pip \
     uv sync --frozen --no-install-project --inexact
 
-# Install Unsloth (platform layer) using our robust installer wrapper.
-COPY docker/install_unsloth.py /usr/local/bin/install_unsloth.py
+#Quick Test that i can import torch and torchvision
+RUN python -c "import torch, torchvision; print('torch', torch.__version__); print('torchvision', torchvision.__version__)"
 
-RUN --mount=type=cache,target=/root/.cache/uv \
-    --mount=type=cache,target=/root/.cache/pip \
-    set -eux; \
-    python -c "import torch; print('torch:', torch.__version__, 'cuda build:', torch.version.cuda)"; \
-    UNSLOTH_INSTALLER_REF="${UNSLOTH_INSTALLER_REF:-main}" python /usr/local/bin/install_unsloth.py
 
 # Copy shell helpers into a stable location in the image
 COPY .devcontainer/shell/uv_guard.sh /etc/profile.d/uv_guard.sh
