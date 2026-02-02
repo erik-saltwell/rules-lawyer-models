@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Iterator
 from contextlib import AbstractContextManager, contextmanager
-from typing import Protocol, runtime_checkable
+from typing import Any, Protocol, runtime_checkable
 
 
 class StatusHandle(Protocol):
@@ -24,6 +24,7 @@ class LoggingProtocol(Protocol):
     def report_warning(self, message: str) -> None: ...
     def report_error(self, message: str) -> None: ...
     def report_exception(self, context: str, exc: BaseException) -> None: ...
+    def report_table_message(self, row_data: dict[str, Any]) -> None: ...
 
     def status(self, message: str) -> AbstractContextManager[StatusHandle]: ...
     def progress(self, description: str, *, total: int | None = None) -> AbstractContextManager[ProgressTask]: ...
@@ -74,6 +75,9 @@ class NullLogger(LoggingProtocol):
         pass
 
     def report_exception(self, context: str, exc: BaseException) -> None:
+        pass
+
+    def report_table_message(self, row_data: dict[str, Any]) -> None:
         pass
 
     @contextmanager
