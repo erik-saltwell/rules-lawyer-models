@@ -9,7 +9,10 @@ import typer
 from dotenv import load_dotenv
 from rich.console import Console
 
-import rules_lawyer_models.console.console_validation as checks
+from rules_lawyer_models.commands import AnalyzeSequenceLengths, CommmandProtocol
+from rules_lawyer_models.console.rich_logging_protocol import RichConsoleLogger
+from rules_lawyer_models.core import RunContext
+from rules_lawyer_models.utils import CommonPaths
 from rules_lawyer_models.utils.logging_config import configure_logging
 
 load_dotenv()
@@ -39,29 +42,16 @@ app = typer.Typer(
 @app.command("test")
 def test() -> None:
     """Simple smoke test command."""
-    from transformers import PreTrainedTokenizerBase
-
-    from rules_lawyer_models.core.loaders import load_tokenizer
-    from rules_lawyer_models.exploration.token_length import compute_tokens
-    from rules_lawyer_models.utils.model_name import BaseModelName
-
-    tokenizer: PreTrainedTokenizerBase = load_tokenizer(BaseModelName.QWEN_25_14B_4BIT_BASE)
-    other_count = compute_tokens("Other", tokenizer)
-    reules_question_count = compute_tokens("Question", tokenizer)
-    print(f"Other token count: {other_count}")
-    print(f"Rules Question token count: {reules_question_count}")
-
-
-@app.command("reddit-rpg-post-classifier")
-def reddit_rpg_post_classifier() -> None:
     console = Console()
-    console.print("[green]Hello from test[/green]")
-    errors: list[str] = []
+    logger = RichConsoleLogger(console)
+    paths = CommonPaths("reddit_rpg_post_classifier")
+    ctxt: RunContext = RunContext(paths, logger)
+    command: CommmandProtocol = AnalyzeSequenceLengths()
+    command.execute(ctxt)
 
-    model_name: str = current_command_name().replace("-", "_")
-    errors.extend(checks._validate_directory_name(model_name))
 
-    check_all_erors(errors, console)
+@app.command("test-two")
+def reddit_rpg_post_classifier() -> None: ...
 
 
 def _version_callback(value: bool) -> None:

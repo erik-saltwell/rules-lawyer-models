@@ -33,3 +33,21 @@ def analyze_token_lengths(dataset: Dataset, column_name: str, tokenizer: PreTrai
         p99_5=int(p99_5),
         p100=int(p100),
     )
+
+
+def get_percent_samples_within_sequence_length(
+    dataset: Dataset, column_name: str, tokenizer: PreTrainedTokenizerBase, max_sequence_length: int
+) -> float:
+    """Return the percentage of rows whose token count is within max_sequence_length.
+
+    Args:
+        dataset: The dataset to analyze.
+        column_name: The text column to tokenize.
+        tokenizer: Tokenizer used to compute token counts.
+        max_sequence_length: The upper token-count threshold (inclusive).
+
+    Returns:
+        The percentage (0–1) of samples with token count <= max_sequence_length.
+    """
+    lengths = np.array([compute_tokens(row[column_name], tokenizer) for row in dataset])  # pyright: ignore
+    return float(np.mean(lengths <= max_sequence_length))

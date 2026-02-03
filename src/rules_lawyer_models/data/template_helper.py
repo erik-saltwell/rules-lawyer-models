@@ -5,7 +5,7 @@ from rules_lawyer_models.utils.model_name import BaseModelName
 from rules_lawyer_models.utils.text_fragments import FragmentID, get_fragment
 
 model_fragment_map: dict[BaseModelName, FragmentID] = {
-    BaseModelName.QWEN_25_14B_4BIT_INSTRUCT: FragmentID.RPG_POST_CLASSIFICATION_PROMPT,
+    BaseModelName.QWEN_25_14B_4BIT_BASE: FragmentID.ALPACA_PROMPT_TEMPLATE,
 }
 
 
@@ -14,6 +14,10 @@ def get_template_skeleton(model_name: BaseModelName) -> str:
     if fragment_id is None:
         raise ValueError(f"No template fragment found for model {model_name}")
     return get_fragment(fragment_id)
+
+
+def base_model_is_instruct(model_name: BaseModelName) -> bool:
+    return model_name not in model_fragment_map
 
 
 def add_templated_column_for_instruct_models(
@@ -83,3 +87,30 @@ def add_templated_column_for_non_instruct_models(
         batched=True,
     )
     return dataset
+
+
+def add_templated_column(
+    dataset: Dataset,
+    input_column_name: str,
+    output_column_name: str,
+    system_prompt: str,
+    tokenizer: PreTrainedTokenizerBase,
+) -> Dataset:
+    if base_model_is_instruct(tokenizer.name_or_path):
+        return add_templated_column_for_instruct_models(
+            dataset=dataset,
+            input_column_name=input_column_name,
+            output_column_name=output_column_name,
+            system_prompt=system_prompt,
+            tokenizer=tokenizer,
+        )
+    else:
+        skeleton_prompt = get_template_skeleton(BaseModelName(tokenizer.name_or_path))
+        return add_templated_column_for_non_instruct_models(
+            dataset=dataset,
+            skeleton_prompt=skeleton_prompt,
+            input_column_name=input_column_name,
+            output_column_name=output_column_name,
+            system_prompt=system_prompt,
+            tokenizer=tokenizer,
+        )

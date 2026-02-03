@@ -2,6 +2,7 @@ from .common_paths import CommonPaths
 from .dataset_name import DatasetName
 from .logging_protocol import LoggingProtocol
 from .model_name import BaseModelName, TargetModelName
+from .text_fragments import FragmentID, get_fragment
 
 __all__ = [
     "BaseModelName",
@@ -9,4 +10,6 @@ __all__ = [
     "DatasetName",
     "LoggingProtocol",
     "TargetModelName",
+    "FragmentID",
+    "get_fragment",
 ]
