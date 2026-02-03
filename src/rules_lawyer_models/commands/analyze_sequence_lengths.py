@@ -5,33 +5,35 @@ from typing import cast
 from datasets import Dataset, DatasetDict, load_dataset
 from transformers import PreTrainedTokenizerBase
 
-from rules_lawyer_models.core import RunContext, load_tokenizer
+from rules_lawyer_models.core import RunContext
 from rules_lawyer_models.data import add_string_label_column, add_templated_column
 from rules_lawyer_models.exploration import (
     TokenLengthData,
     analyze_token_lengths,
     get_percent_samples_within_sequence_length,
 )
-from rules_lawyer_models.utils import BaseModelName, DatasetName, FragmentID, get_fragment
+from rules_lawyer_models.serialization import load_tokenizer_from_hf
+from rules_lawyer_models.utils import get_fragment
 
 from .command_protocol import CommmandProtocol
 
 
 class AnalyzeSequenceLengths(CommmandProtocol):
     def execute(self, ctxt: RunContext) -> None:
-        datasets: DatasetDict = cast(DatasetDict, load_dataset(DatasetName.REDDIT_RPG_POST_CLASSIFICATION.value))
+        output_column_name: str = "text"
+        datasets: DatasetDict = cast(DatasetDict, load_dataset(ctxt.dataset_name))
         dataset: Dataset = datasets["train"]
-        tokenizer: PreTrainedTokenizerBase = load_tokenizer(BaseModelName.QWEN_25_14B_4BIT_INSTRUCT)
+        tokenizer: PreTrainedTokenizerBase = load_tokenizer_from_hf(ctxt.base_model_name)
         dataset = add_string_label_column(dataset, "label", "str_label")
         dataset = add_templated_column(
-            dataset, "content", "str_label", get_fragment(FragmentID.RPG_POST_CLASSIFICATION_PROMPT), tokenizer
+            dataset, "content", "str_label", get_fragment(ctxt.system_prompt_name), tokenizer
         )
-        result: TokenLengthData = analyze_token_lengths(dataset, "text", tokenizer)
+        result: TokenLengthData = analyze_token_lengths(dataset, output_column_name, tokenizer)
 
         ctxt.logger.report_table_message(result._asdict())
-        self.produce_coverage_report_from_target(dataset, "text", 1024, tokenizer, ctxt)
-        self.produce_coverage_report_from_target(dataset, "text", 1536, tokenizer, ctxt)
-        self.produce_coverage_report_from_target(dataset, "text", 2048, tokenizer, ctxt)
+        self.produce_coverage_report_from_target(dataset, output_column_name, 1024, tokenizer, ctxt)
+        self.produce_coverage_report_from_target(dataset, output_column_name, 1536, tokenizer, ctxt)
+        self.produce_coverage_report_from_target(dataset, output_column_name, 2048, tokenizer, ctxt)
 
     def produce_coverage_report_from_target(
         self,
@@ -42,7 +44,7 @@ class AnalyzeSequenceLengths(CommmandProtocol):
         ctxt: RunContext,
     ) -> None:
         coverage_percent: float = get_percent_samples_within_sequence_length(
-            dataset, "text", tokenizer, target_sequence_len
+            dataset, column_name, tokenizer, target_sequence_len
         )
         coverage_loss_count = (1.0 - coverage_percent) * len(dataset)
         ctxt.logger.report_message(

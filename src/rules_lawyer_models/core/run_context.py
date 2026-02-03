@@ -9,6 +9,7 @@ from rules_lawyer_models.utils import (
     LoggingProtocol,
     TargetModelName,
 )
+from rules_lawyer_models.utils.text_fragments import FragmentID
 
 
 @dataclass(slots=True)
@@ -19,3 +20,4 @@ class RunContext:
     model_name: TargetModelName = TargetModelName.NONE
     base_model_name: BaseModelName = BaseModelName.NONE
     dataset_name: DatasetName = DatasetName.NONE
+    system_prompt_name: FragmentID = FragmentID.NONE

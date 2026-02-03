@@ -9,11 +9,14 @@ import typer
 from dotenv import load_dotenv
 from rich.console import Console
 
-from rules_lawyer_models.commands import AnalyzeSequenceLengths, CommmandProtocol
+from rules_lawyer_models.commands import CommmandProtocol, VerifyTemplateData
 from rules_lawyer_models.console.rich_logging_protocol import RichConsoleLogger
 from rules_lawyer_models.core import RunContext
 from rules_lawyer_models.utils import CommonPaths
+from rules_lawyer_models.utils.dataset_name import DatasetName
 from rules_lawyer_models.utils.logging_config import configure_logging
+from rules_lawyer_models.utils.model_name import BaseModelName
+from rules_lawyer_models.utils.text_fragments import FragmentID
 
 load_dotenv()
 configure_logging()
@@ -46,12 +49,22 @@ def test() -> None:
     logger = RichConsoleLogger(console)
     paths = CommonPaths("reddit_rpg_post_classifier")
     ctxt: RunContext = RunContext(paths, logger)
-    command: CommmandProtocol = AnalyzeSequenceLengths()
+    ctxt.base_model_name = BaseModelName.QWEN_25_14B_4BIT_INSTRUCT
+    ctxt.dataset_name = DatasetName.REDDIT_RPG_POST_CLASSIFICATION
+    ctxt.system_prompt_name = FragmentID.RPG_POST_CLASSIFICATION_PROMPT
+    command: CommmandProtocol = VerifyTemplateData(num_rows=5)
     command.execute(ctxt)
 
 
-@app.command("test-two")
-def reddit_rpg_post_classifier() -> None: ...
+@app.command("verify-template")
+def verify_template() -> None:
+    """Verify template data by printing the top rows."""
+    console = Console()
+    logger = RichConsoleLogger(console)
+    paths = CommonPaths("reddit_rpg_post_classifier")
+    ctxt: RunContext = RunContext(paths, logger)
+    command: CommmandProtocol = VerifyTemplateData(num_rows=5)
+    command.execute(ctxt)
 
 
 def _version_callback(value: bool) -> None:
