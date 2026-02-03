@@ -43,7 +43,7 @@ def test() -> None:
 
     from rules_lawyer_models.core.loaders import load_tokenizer
     from rules_lawyer_models.exploration.token_length import compute_tokens
-    from rules_lawyer_models.utils.base_model_name import BaseModelName
+    from rules_lawyer_models.utils.model_name import BaseModelName
 
     tokenizer: PreTrainedTokenizerBase = load_tokenizer(BaseModelName.QWEN_25_14B_4BIT_BASE)
     other_count = compute_tokens("Other", tokenizer)

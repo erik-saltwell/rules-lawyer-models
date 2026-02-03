@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 from datasets import ClassLabel, Dataset, DatasetDict, Features, Value
 
-from rules_lawyer_models.data.dataset_helper import make_stress_split, split_dataset
+from rules_lawyer_models.data.dataset_helper import add_string_label_column, make_stress_split, split_dataset
 
 
 @pytest.fixture()
@@ -103,3 +103,53 @@ class TestMakeStressSplit:
 
         assert len(result) == 2
         assert list(result["id"]) == [0, 1]
+
+
+class TestAddStringLabelColumn:
+    def test_classlabel_to_string(self) -> None:
+        features = Features(
+            {
+                "label": ClassLabel(names=["cat", "dog", "bird"]),
+            }
+        )
+        ds = Dataset.from_dict({"label": [0, 1, 2, 0]}, features=features)
+
+        result = add_string_label_column(ds, "label", "label_str")
+
+        assert "label_str" in result.column_names
+        assert list(result["label_str"]) == ["cat", "dog", "bird", "cat"]
+
+    def test_string_column_copied(self) -> None:
+        features = Features({"name": Value("string")})
+        ds = Dataset.from_dict({"name": ["alice", "bob"]}, features=features)
+
+        result = add_string_label_column(ds, "name", "name_copy")
+
+        assert list(result["name_copy"]) == ["alice", "bob"]
+
+    def test_missing_column_raises_key_error(self) -> None:
+        ds = Dataset.from_dict({"x": [1, 2]})
+
+        with pytest.raises(KeyError, match="not_here"):
+            add_string_label_column(ds, "not_here", "out")
+
+    def test_duplicate_column_raises_value_error(self) -> None:
+        features = Features({"label": ClassLabel(names=["a", "b"])})
+        ds = Dataset.from_dict({"label": [0, 1]}, features=features)
+
+        with pytest.raises(ValueError, match="already exists"):
+            add_string_label_column(ds, "label", "label")
+
+    def test_preserves_original_columns(self) -> None:
+        features = Features(
+            {
+                "label": ClassLabel(names=["x", "y"]),
+                "data": Value("string"),
+            }
+        )
+        ds = Dataset.from_dict({"label": [0, 1], "data": ["a", "b"]}, features=features)
+
+        result = add_string_label_column(ds, "label", "label_str")
+
+        assert list(result["label"]) == [0, 1]
+        assert list(result["data"]) == ["a", "b"]
