@@ -9,7 +9,7 @@ class CommonPaths:
     OUTPUTS_DIR: Path = Path("outputs")
     EXPLORATION_REPORTS_DIR: Path = Path("exploration_reports")
     FRAGMENTS_DIR: Path = Path("fragments")
-    DATASETS_DIR: Path = Path("datasets")
+    DATASETS_DIR: Path = Path("dataset")
 
     def __post_init__(self):
         self.ensure_all_dirs_exist()

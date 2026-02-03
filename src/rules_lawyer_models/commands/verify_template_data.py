@@ -1,13 +1,11 @@
 from __future__ import annotations
 
-from typing import cast
-
-from datasets import Dataset, DatasetDict, load_dataset
+from datasets import Dataset, DatasetDict
 from transformers import PreTrainedTokenizerBase
 
 from rules_lawyer_models.core import RunContext
 from rules_lawyer_models.data import add_string_label_column, add_templated_column
-from rules_lawyer_models.serialization import load_tokenizer_from_hf
+from rules_lawyer_models.serialization import load_dataset_from_hf, load_tokenizer_from_hf
 from rules_lawyer_models.utils import get_fragment
 
 from .command_protocol import CommmandProtocol
@@ -18,7 +16,7 @@ class VerifyTemplateData(CommmandProtocol):
         self.num_rows = num_rows
 
     def execute(self, ctxt: RunContext) -> None:
-        datasets: DatasetDict = cast(DatasetDict, load_dataset(ctxt.dataset_name.value))
+        datasets: DatasetDict = load_dataset_from_hf(ctxt.dataset_name)
         dataset: Dataset = datasets["train"]
         tokenizer: PreTrainedTokenizerBase = load_tokenizer_from_hf(ctxt.base_model_name)
         dataset = add_string_label_column(dataset, "label", "str_label")

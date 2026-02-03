@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-from typing import cast
-
-from datasets import Dataset, DatasetDict, load_dataset
+from datasets import Dataset, DatasetDict
 from transformers import PreTrainedTokenizerBase
 
 from rules_lawyer_models.core import RunContext
@@ -12,7 +10,7 @@ from rules_lawyer_models.exploration import (
     analyze_token_lengths,
     get_percent_samples_within_sequence_length,
 )
-from rules_lawyer_models.serialization import load_tokenizer_from_hf
+from rules_lawyer_models.serialization import load_dataset_from_hf, load_tokenizer_from_hf
 from rules_lawyer_models.utils import get_fragment
 
 from .command_protocol import CommmandProtocol
@@ -21,7 +19,7 @@ from .command_protocol import CommmandProtocol
 class AnalyzeSequenceLengths(CommmandProtocol):
     def execute(self, ctxt: RunContext) -> None:
         output_column_name: str = "text"
-        datasets: DatasetDict = cast(DatasetDict, load_dataset(ctxt.dataset_name))
+        datasets: DatasetDict = load_dataset_from_hf(ctxt.dataset_name)
         dataset: Dataset = datasets["train"]
         tokenizer: PreTrainedTokenizerBase = load_tokenizer_from_hf(ctxt.base_model_name)
         dataset = add_string_label_column(dataset, "label", "str_label")
