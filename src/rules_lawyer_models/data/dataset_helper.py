@@ -25,15 +25,19 @@ def split_dataset(
         test_percent_of_total (float): The percentage of the total dataset to allocate to the test set.
         validation_percent_of_total (float): The percentage of the total dataset to allocate to the validation set.
         ctxt (RunContext): The run context containing configuration and logging.
-        stratify_by_column_name (str, optional): The name of the label column. Defaults to "".
+        stratify_by_column_name (str, optional): The name of the label column. Defaults to None.
 
     Returns:
         DatasetDict: A new DatasetDict with 'train', 'validation', and 'test' splits.
     """
+
     if test_percent_of_total + validation_percent_of_total >= 1.0:
         raise ValueError("The sum of test_percent_of_total and val_percent_of_total must be less than 1.0")
 
     non_train_percent_of_total = test_percent_of_total + validation_percent_of_total
+    if non_train_percent_of_total == 0.0:
+        raise ValueError("At least one of test_percent_of_total or val_percent_of_total must be greater than 0.0")
+
     validation_percent_of_non_train = validation_percent_of_total / non_train_percent_of_total
 
     train_nontrain_sets = datasets[dataset_name].train_test_split(
@@ -74,7 +78,7 @@ def make_stress_split(
         A Dataset with the top *number_of_rows* rows sorted by descending token count.
     """
     token_counts = [compute_tokens(text, tokenizer) for text in dataset[text_column_name]]
-    dataset = dataset.add_column("_token_count", token_counts, new_fingerprint=f"{dataset._fingerprint}_token_count")
+    dataset = dataset.add_column("_token_count", token_counts)  # pyright: ignore
     dataset = dataset.sort("_token_count", reverse=True)
     dataset = dataset.select(range(min(number_of_rows, len(dataset))))
     dataset = dataset.remove_columns("_token_count")
