@@ -10,6 +10,7 @@ from dotenv import load_dotenv
 from rich.console import Console
 
 from rules_lawyer_models.commands import CommmandProtocol, VerifyTemplateData
+from rules_lawyer_models.commands.analyze_sequence_lengths import AnalyzeSequenceLengths
 from rules_lawyer_models.console.rich_logging_protocol import RichConsoleLogger
 from rules_lawyer_models.core import RunContext
 from rules_lawyer_models.utils import CommonPaths
@@ -49,10 +50,11 @@ def test() -> None:
     logger = RichConsoleLogger(console)
     paths = CommonPaths("reddit_rpg_post_classifier")
     ctxt: RunContext = RunContext(paths, logger)
-    ctxt.base_model_name = BaseModelName.QWEN_25_14B_4BIT_INSTRUCT
+    ctxt.base_model_name = BaseModelName.QWEN_25_3B_05BIT_INSTRUCT
     ctxt.dataset_name = DatasetName.REDDIT_RPG_POST_CLASSIFICATION
     ctxt.system_prompt_name = FragmentID.RPG_POST_CLASSIFICATION_PROMPT
-    command: CommmandProtocol = VerifyTemplateData(num_rows=5)
+
+    command: CommmandProtocol = AnalyzeSequenceLengths()
     command.execute(ctxt)
 
 

@@ -11,6 +11,7 @@ from rules_lawyer_models.exploration import (
     get_percent_samples_within_sequence_length,
 )
 from rules_lawyer_models.serialization import load_dataset_from_hf, load_tokenizer_from_hf
+from rules_lawyer_models.training.test_taining import perform_test_run
 from rules_lawyer_models.utils import get_fragment
 
 from .command_protocol import CommmandProtocol
@@ -26,6 +27,8 @@ class AnalyzeSequenceLengths(CommmandProtocol):
         dataset = add_templated_column(
             dataset, "content", "str_label", get_fragment(ctxt.system_prompt_name), tokenizer
         )
+        perform_test_run(ctxt, dataset)
+
         result: TokenLengthData = analyze_token_lengths(dataset, output_column_name, tokenizer)
 
         ctxt.logger.report_table_message(result._asdict())

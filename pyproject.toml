@@ -3,9 +3,7 @@ name = "rules-lawyer-models"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
-authors = [
-    { name = "Erik Saltwell", email = "erik.saltwell@gmail.com" },
-]
+authors = [{ name = "Erik Saltwell", email = "erik.saltwell@gmail.com" }]
 requires-python = "==3.11.14"
 dependencies = [
     "python-dotenv>=1.2.1",
@@ -58,6 +56,7 @@ dependencies = [
     "unsloth-zoo==2026.1.4",
     "unsloth==2026.1.4",
     "click>=8.3.1",
+    "setuptools>=80.10.2",
 ]
 
 [project.scripts]
@@ -80,6 +79,11 @@ dev = [
 [tool.pytest.ini_options]
 testpaths = ["tests/unit"]
 addopts = "-q -s"
+filterwarnings = [
+    "ignore::DeprecationWarning:triton",
+    "ignore::dill._dill.PicklingWarning",
+    "ignore:WARNING. Unsloth should be imported:UserWarning",
+]
 
 [tool.ruff]
 cache-dir = "~/.cache/ruff"
@@ -98,13 +102,13 @@ indent-style = "space"
 python_version = "3.11"
 warn_unused_configs = true
 exclude = [
-  "^build/",
-  "^dist/",
-  "^generated/",
-  "^vendor/",
-  "^\\.venv/",
-  "venv",
-  "unsloth_compiled_cache"
+    "^build/",
+    "^dist/",
+    "^generated/",
+    "^vendor/",
+    "^\\.venv/",
+    "venv",
+    "unsloth_compiled_cache",
 ]
 
 # Reasonable signal without going full-strict
@@ -124,4 +128,3 @@ ignore_missing_imports = true
 # Nice for CLI apps with a src/ layout
 mypy_path = ["src"]
 packages = ["rules_lawyer_models"]
-
