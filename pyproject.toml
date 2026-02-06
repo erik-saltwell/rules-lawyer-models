@@ -57,6 +57,7 @@ dependencies = [
     "unsloth==2026.1.4",
     "click>=8.3.1",
     "setuptools>=80.10.2",
+    "wandb>=0.24.2",
 ]
 
 [project.scripts]
