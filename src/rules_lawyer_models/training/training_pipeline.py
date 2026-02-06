@@ -13,8 +13,8 @@ from rules_lawyer_models.training.training_options_factory import (
 
 
 def run_pipeline(
-    factory_settings: SettingsForTrainingOptionsFactory,
     run_configuration: RunConfiguration,
+    factory_settings: SettingsForTrainingOptionsFactory,
     ctxt: RunContext,
 ) -> None:
     training_options: TrainingOptions = create_training_options(factory_settings)
