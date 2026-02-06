@@ -1,3 +1,12 @@
+from rules_lawyer_models.evaluation.binary_text_classification_aggregators import (
+    compute_accuracy,
+    compute_f1,
+    compute_false_negative_rate,
+    compute_false_positive_rate,
+    compute_precision,
+    compute_recall,
+    compute_specificity,
+)
 from rules_lawyer_models.evaluation.binary_text_classification_metric import (
     BinaryClassificationData,
     BinaryClassificationResult,
@@ -14,6 +23,7 @@ from rules_lawyer_models.evaluation.perplexity_metric import PerplexityMetric
 __all__ = [
     "BinaryClassificationData",
     "BinaryClassificationResult",
+    "BinaryTextClassificationMetric",
     "FalsePositiveRateMetric",
     "LossMetric",
     "MetricProtocol",
@@ -21,6 +31,12 @@ __all__ = [
     "MetricsRegistry",
     "MetricsSnapshot",
     "PerplexityMetric",
-    "BinaryTextClassificationMetric",
     "UnclassifiedTextData",
+    "compute_accuracy",
+    "compute_f1",
+    "compute_false_negative_rate",
+    "compute_false_positive_rate",
+    "compute_precision",
+    "compute_recall",
+    "compute_specificity",
 ]
