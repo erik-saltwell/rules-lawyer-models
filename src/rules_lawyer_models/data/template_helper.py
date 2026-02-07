@@ -20,6 +20,49 @@ def base_model_is_instruct(model_name: BaseModelName) -> bool:
     return model_name not in model_fragment_map
 
 
+def add_eval_prompt_column_for_instruct_models(
+    dataset: Dataset,
+    input_column_name: str,
+    output_column_name: str,
+    system_prompt: str,
+    tokenizer: PreTrainedTokenizerBase,
+) -> Dataset:
+    EOS_TOKEN = tokenizer.eos_token  # Must add EOS_TOKEN
+    if EOS_TOKEN is None:
+        raise ValueError("The tokenizer does not have an EOS token defined.")
+
+    def formatting_prompts_prompt_only_func(examples):
+        inputs = examples[input_column_name]
+        labels = examples[output_column_name]  # your ground-truth: "Question" or "Other"
+
+        prompts: list[str] = []
+        for user_input, _label in zip(inputs, labels, strict=True):
+            # Prompt-only messages: NO assistant content included.
+            messages = [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_input},
+            ]
+
+            # IMPORTANT:
+            # - add_generation_prompt=True makes the template end with the assistant prefix
+            #   (e.g., "<|assistant|>" or equivalent), ready for generation.
+            prompt = tokenizer.apply_chat_template(
+                messages,
+                tokenize=False,
+                add_generation_prompt=True,
+            )
+
+            prompts.append(str(prompt))
+
+        # Keep the label column for scoring.
+        return {"prompt": prompts, "label": labels}
+
+    # Map the formatted prompts into the dataset for the SFTTrainer
+    dataset = dataset.map(formatting_prompts_prompt_only_func, batched=True)
+
+    return dataset
+
+
 def add_templated_column_for_instruct_models(
     dataset: Dataset,
     input_column_name: str,

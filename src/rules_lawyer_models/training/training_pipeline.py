@@ -1,5 +1,8 @@
 from unsloth import FastLanguageModel  # isort: skip
-from transformers import PreTrainedModel, PreTrainedTokenizerBase
+from transformers import (
+    PreTrainedModel,
+    PreTrainedTokenizerBase,
+)
 from trl.trainer.sft_config import SFTConfig
 from trl.trainer.sft_trainer import SFTTrainer
 
@@ -65,14 +68,19 @@ def run_pipeline(
             if not run_configuration.training_length.use_steps
             else -1,
             learning_rate=training_options.learning_rate,
-            logging_steps=run_configuration.logging_steps,
             optim=training_options.optim,
             weight_decay=training_options.weight_decay,
             lr_scheduler_type=training_options.lr_schedular_type,
             output_dir=run_configuration.output_dir,
             report_to=run_configuration.report_to,
-            save_steps=run_configuration.logging_steps,
             seed=run_configuration.seed,
+            logging_steps=10,
+            save_steps=run_configuration.eval_steps,
+            eval_strategy="steps",
+            eval_steps=run_configuration.eval_steps,
+            # makes eval cheaper on VRAM
+            fp16_full_eval=True,
+            per_device_eval_batch_size=1,
         ),
     )
 

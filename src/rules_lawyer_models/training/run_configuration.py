@@ -28,7 +28,7 @@ class RunConfiguration:
     seed: int = 3412
     output_dir: str = "outputs"
     report_to: str = "none"
-    logging_steps: int = 50
+    eval_steps: int = 50
     train_on_outputs_only = False
 
     def compute_step_size(self) -> int:
