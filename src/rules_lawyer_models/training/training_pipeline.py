@@ -1,4 +1,7 @@
 from unsloth import FastLanguageModel  # isort: skip
+import os
+
+import wandb
 from transformers import (
     PreTrainedModel,
     PreTrainedTokenizerBase,
@@ -20,6 +23,13 @@ def run_pipeline(
     factory_settings: SettingsForTrainingOptionsFactory,
     ctxt: RunContext,
 ) -> None:
+    os.environ["API_KEY"] = "abc123"
+    os.environ["WANDB_LOG_MODEL"] = "checkpoint"
+    os.environ["WANDB_PROJECT"] = ctxt.model_name
+    run_name: str = ctxt.wandb_run_name
+
+    wandb.login()
+
     training_options: TrainingOptions = create_training_options(factory_settings)
 
     model: PreTrainedModel
@@ -72,7 +82,6 @@ def run_pipeline(
             weight_decay=training_options.weight_decay,
             lr_scheduler_type=training_options.lr_schedular_type,
             output_dir=run_configuration.output_dir,
-            report_to=run_configuration.report_to,
             seed=run_configuration.seed,
             logging_steps=10,
             save_steps=run_configuration.eval_steps,
@@ -80,7 +89,8 @@ def run_pipeline(
             eval_steps=run_configuration.eval_steps,
             # makes eval cheaper on VRAM
             fp16_full_eval=True,
-            per_device_eval_batch_size=1,
+            report_to="wandb",  # enable logging to W&B
+            run_name=run_name,  # name of the W&B run (optional)
         ),
     )
 

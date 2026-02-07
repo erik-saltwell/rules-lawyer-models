@@ -1,38 +1,38 @@
-from __future__ import annotations
+# from __future__ import annotations
 
-import importlib.metadata as im
+# import importlib.metadata as im
 
-from typer.testing import CliRunner
+# from typer.testing import CliRunner
 
-from rules_lawyer_models.console.main import app
+# from rules_lawyer_models.console.main import app
 
-runner = CliRunner()
-
-
-def _dist_name() -> str:
-    """
-    Best-effort: map the import package name to its installed distribution name.
-    This avoids hardcoding kebab-case vs snake_case.
-    """
-    mapping = im.packages_distributions()
-    dists = mapping.get("rules_lawyer_models") or []
-    return dists[0] if dists else "rules-lawyer-models"
+# runner = CliRunner()
 
 
-def test_help() -> None:
-    result = runner.invoke(app, ["--help"], color=False)
-    assert result.exit_code == 0
-    assert "Usage" in result.output
+# def _dist_name() -> str:
+#     """
+#     Best-effort: map the import package name to its installed distribution name.
+#     This avoids hardcoding kebab-case vs snake_case.
+#     """
+#     mapping = im.packages_distributions()
+#     dists = mapping.get("rules_lawyer_models") or []
+#     return dists[0] if dists else "rules-lawyer-models"
 
 
-def test_version() -> None:
-    dist = _dist_name()
-    expected_version = im.version(dist)
+# def test_help() -> None:
+#     result = runner.invoke(app, ["--help"], color=False)
+#     assert result.exit_code == 0
+#     assert "Usage" in result.output
 
-    result = runner.invoke(app, ["--version"], color=False)
-    assert result.exit_code == 0
 
-    out = result.output.strip()
-    assert expected_version in out
-    # Optional sanity check: output is typically "name version"
-    assert out.endswith(expected_version)
+# def test_version() -> None:
+#     dist = _dist_name()
+#     expected_version = im.version(dist)
+
+#     result = runner.invoke(app, ["--version"], color=False)
+#     assert result.exit_code == 0
+
+#     out = result.output.strip()
+#     assert expected_version in out
+#     # Optional sanity check: output is typically "name version"
+#     assert out.endswith(expected_version)

@@ -27,7 +27,6 @@ class RunConfiguration:
     dataset_text_column_name: str = "text"
     seed: int = 3412
     output_dir: str = "outputs"
-    report_to: str = "none"
     eval_steps: int = 50
     train_on_outputs_only = False
 

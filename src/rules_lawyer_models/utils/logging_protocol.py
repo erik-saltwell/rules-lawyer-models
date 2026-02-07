@@ -27,7 +27,7 @@ class LoggingProtocol(Protocol):
     def report_table_message(self, row_data: dict[str, Any]) -> None: ...
 
     def status(self, message: str) -> AbstractContextManager[StatusHandle]: ...
-    def progress(self, description: str, *, total: int | None = None) -> AbstractContextManager[ProgressTask]: ...
+    def progress(self, description: str, total: int | None = None) -> AbstractContextManager[ProgressTask]: ...
 
 
 class _NullStatus(StatusHandle):
@@ -85,5 +85,5 @@ class NullLogger(LoggingProtocol):
         yield _NullStatus()
 
     @contextmanager
-    def progress(self, description: str, *, total: int | None = None) -> Iterator[ProgressTask]:
+    def progress(self, description: str, total: int | None = None) -> Iterator[ProgressTask]:
         yield _NullProgress()

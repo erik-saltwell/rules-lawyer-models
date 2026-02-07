@@ -21,3 +21,4 @@ class RunContext:
     base_model_name: BaseModelName = BaseModelName.NONE
     dataset_name: DatasetName = DatasetName.NONE
     system_prompt_name: FragmentID = FragmentID.NONE
+    wandb_run_name: str = "test"

@@ -71,6 +71,7 @@ build-backend = "uv_build"
 dev = [
     "mypy>=1.19.1",
     "pre-commit>=4.5.1",
+    "pyright>=1.1.408",
     "pytest>=9.0.2",
     "ruff>=0.14.13",
     "ssort>=0.16.0",
@@ -129,3 +130,12 @@ ignore_missing_imports = true
 # Nice for CLI apps with a src/ layout
 mypy_path = ["src"]
 packages = ["rules_lawyer_models"]
+
+[tool.pyright]
+exclude = [
+    "**/unsloth_compiled_cache/**",
+    "**/.venv/**",
+    "**/.cache/**",
+    "**/build/**",
+    "**/dist/**",
+]
