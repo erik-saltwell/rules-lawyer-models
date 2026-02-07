@@ -64,7 +64,7 @@ def run_pipeline(
             max_steps=-1
             if not run_configuration.training_length.use_steps
             else run_configuration.training_length.max_steps,
-            num_train_epochs=RunConfiguration.training_length.max_epochs
+            num_train_epochs=run_configuration.training_length.max_epochs
             if not run_configuration.training_length.use_steps
             else -1,
             learning_rate=training_options.learning_rate,
