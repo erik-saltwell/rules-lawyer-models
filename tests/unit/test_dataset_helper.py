@@ -5,7 +5,12 @@ from unittest.mock import MagicMock, patch
 import pytest
 from datasets import ClassLabel, Dataset, DatasetDict, Features, Value
 
-from rules_lawyer_models.data.dataset_helper import add_string_label_column, make_stress_split, split_dataset
+from rules_lawyer_models.data.dataset_helper import (
+    add_string_label_column,
+    make_stress_split,
+    rebalance_minority_class,
+    split_dataset,
+)
 
 
 @pytest.fixture()
@@ -153,3 +158,90 @@ class TestAddStringLabelColumn:
 
         assert list(result["label"]) == [0, 1]
         assert list(result["data"]) == ["a", "b"]
+
+
+class TestRebalanceMinorityClass:
+    @pytest.fixture()
+    def imbalanced_dataset(self) -> Dataset:
+        """100 minority + 900 majority rows."""
+        labels = ["pos"] * 100 + ["neg"] * 900
+        return Dataset.from_dict({"text": [f"row_{i}" for i in range(1000)], "label": labels})
+
+    def test_rebalances_to_target(self, imbalanced_dataset: Dataset) -> None:
+        result = rebalance_minority_class(imbalanced_dataset, "label", target_minority_percent=0.3, tolerance=0.05)
+
+        minority_count = list(result["label"]).count("pos")
+        actual_percent = minority_count / len(result)
+        assert actual_percent == pytest.approx(0.3, abs=0.05)
+
+    def test_all_minority_rows_preserved(self, imbalanced_dataset: Dataset) -> None:
+        result = rebalance_minority_class(imbalanced_dataset, "label", target_minority_percent=0.3, tolerance=0.05)
+
+        assert list(result["label"]).count("pos") == 100
+
+    def test_total_rows_reduced(self, imbalanced_dataset: Dataset) -> None:
+        result = rebalance_minority_class(imbalanced_dataset, "label", target_minority_percent=0.3, tolerance=0.05)
+
+        assert len(result) < len(imbalanced_dataset)
+
+    def test_already_within_tolerance_returns_unchanged(self) -> None:
+        labels = ["pos"] * 30 + ["neg"] * 70
+        ds = Dataset.from_dict({"label": labels})
+
+        result = rebalance_minority_class(ds, "label", target_minority_percent=0.3, tolerance=0.05)
+
+        assert len(result) == len(ds)
+
+    def test_seed_is_deterministic(self, imbalanced_dataset: Dataset) -> None:
+        r1 = rebalance_minority_class(imbalanced_dataset, "label", target_minority_percent=0.3, tolerance=0.05, seed=99)
+        r2 = rebalance_minority_class(imbalanced_dataset, "label", target_minority_percent=0.3, tolerance=0.05, seed=99)
+
+        assert list(r1["text"]) == list(r2["text"])
+
+    def test_different_seeds_give_different_samples(self, imbalanced_dataset: Dataset) -> None:
+        r1 = rebalance_minority_class(imbalanced_dataset, "label", target_minority_percent=0.3, tolerance=0.05, seed=1)
+        r2 = rebalance_minority_class(imbalanced_dataset, "label", target_minority_percent=0.3, tolerance=0.05, seed=2)
+
+        assert list(r1["text"]) != list(r2["text"])
+
+    def test_multiclass_uses_smallest_as_minority(self) -> None:
+        labels = ["a"] * 50 + ["b"] * 300 + ["c"] * 650
+        ds = Dataset.from_dict({"label": labels})
+
+        result = rebalance_minority_class(ds, "label", target_minority_percent=0.2, tolerance=0.05)
+
+        minority_count = list(result["label"]).count("a")
+        assert minority_count == 50
+        assert minority_count / len(result) == pytest.approx(0.2, abs=0.05)
+
+    def test_missing_column_raises_key_error(self) -> None:
+        ds = Dataset.from_dict({"x": [1, 2]})
+
+        with pytest.raises(KeyError, match="no_col"):
+            rebalance_minority_class(ds, "no_col", target_minority_percent=0.3, tolerance=0.05)
+
+    def test_target_zero_raises_value_error(self) -> None:
+        ds = Dataset.from_dict({"label": ["a", "b"]})
+
+        with pytest.raises(ValueError, match="between 0 and 1"):
+            rebalance_minority_class(ds, "label", target_minority_percent=0.0, tolerance=0.05)
+
+    def test_target_one_raises_value_error(self) -> None:
+        ds = Dataset.from_dict({"label": ["a", "b"]})
+
+        with pytest.raises(ValueError, match="between 0 and 1"):
+            rebalance_minority_class(ds, "label", target_minority_percent=1.0, tolerance=0.05)
+
+    def test_negative_tolerance_raises_value_error(self) -> None:
+        ds = Dataset.from_dict({"label": ["a", "b"]})
+
+        with pytest.raises(ValueError, match="tolerance must be positive"):
+            rebalance_minority_class(ds, "label", target_minority_percent=0.3, tolerance=-0.01)
+
+    def test_cannot_achieve_target_raises_value_error(self) -> None:
+        # 5 minority, 10 majority — targeting 2% minority would need 245 majority rows
+        labels = ["rare"] * 5 + ["common"] * 10
+        ds = Dataset.from_dict({"label": labels})
+
+        with pytest.raises(ValueError, match="Cannot achieve target"):
+            rebalance_minority_class(ds, "label", target_minority_percent=0.02, tolerance=0.005)

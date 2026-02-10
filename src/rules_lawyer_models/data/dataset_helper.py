@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import random as _random
 from typing import TYPE_CHECKING, Any
 
 from datasets import ClassLabel, Dataset, DatasetDict, Value, concatenate_datasets
@@ -196,3 +197,70 @@ def add_predictions_column(
     system_prompt = get_fragment(system_prompt_id)
     predictions = [generator.generate(system_prompt, text) for text in dataset[content_column_name]]
     return dataset.add_column(predictions_column_name, predictions)  # pyright: ignore
+
+
+def rebalance_minority_class(
+    dataset: Dataset,
+    label_column_name: str,
+    target_minority_percent: float,
+    tolerance: float,
+    seed: int = 42,
+) -> Dataset:
+    """Undersample the majority class so the minority class represents approximately the target percentage.
+
+    Args:
+        dataset: The source dataset.
+        label_column_name: Column containing class labels.
+        target_minority_percent: Desired fraction (0–1) for the minority class.
+        tolerance: Acceptable absolute deviation from the target (e.g. 0.05 for ±5%).
+        seed: Random seed for reproducible sampling.
+
+    Returns:
+        A rebalanced Dataset where the minority class is within tolerance of the target.
+
+    Raises:
+        ValueError: If inputs are invalid or the target cannot be achieved.
+    """
+    if not 0.0 < target_minority_percent < 1.0:
+        raise ValueError(f"target_minority_percent must be between 0 and 1 exclusive, got {target_minority_percent}")
+    if tolerance <= 0.0:
+        raise ValueError(f"tolerance must be positive, got {tolerance}")
+    if label_column_name not in dataset.column_names:
+        raise KeyError(f"Column '{label_column_name}' not found. Available columns: {dataset.column_names}")
+
+    labels: list[Any] = dataset[label_column_name]
+    counts: dict[Any, int] = {}
+    for label in labels:
+        counts[label] = counts.get(label, 0) + 1
+
+    minority_class = min(counts, key=counts.__getitem__)
+    minority_count = counts[minority_class]
+    current_percent = minority_count / len(dataset)
+
+    if abs(current_percent - target_minority_percent) <= tolerance:
+        return dataset
+
+    target_non_minority = round(minority_count * (1.0 - target_minority_percent) / target_minority_percent)
+    non_minority_indices = [i for i, label in enumerate(labels) if label != minority_class]
+
+    if target_non_minority >= len(non_minority_indices):
+        raise ValueError(
+            f"Cannot achieve target {target_minority_percent:.1%} ± {tolerance:.1%}: "
+            f"minority class '{minority_class}' has {minority_count} rows but would need "
+            f"at most {target_non_minority} non-minority rows (have {len(non_minority_indices)})"
+        )
+
+    rng = _random.Random(seed)
+    sampled_non_minority = rng.sample(non_minority_indices, target_non_minority)
+
+    minority_indices = [i for i, label in enumerate(labels) if label == minority_class]
+    rebalanced = dataset.select(sorted(minority_indices + sampled_non_minority))
+
+    result_percent = minority_count / len(rebalanced)
+    if abs(result_percent - target_minority_percent) > tolerance:
+        raise ValueError(
+            f"Rebalancing landed at {result_percent:.2%} which is outside "
+            f"target {target_minority_percent:.1%} ± {tolerance:.1%}"
+        )
+
+    return rebalanced
