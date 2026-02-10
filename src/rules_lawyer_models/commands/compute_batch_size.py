@@ -34,10 +34,11 @@ class ComputeBatchSizeCommand:
 
     def execute(self, ctxt: RunContext) -> None:
         hf_logging.disable_progress_bar()
+        hf_logging.set_verbosity_error()
         stress_dataset = self.create_stress_set(self.run_configuration.base_model_name)
         self.run_configuration = replace(self.run_configuration, train_dataset=stress_dataset)
-        best_batch_size: int = self.find_max_batch_size(stress_dataset)
-        ctxt.logger.report_message(f"Max batch size: {best_batch_size}")
+        _best_batch_size: int = self.find_max_batch_size(stress_dataset, ctxt)
+        # ctxt.logger.report_message(f"Max batch size: {best_batch_size}")
 
     def create_stress_set(self, base_model_name: BaseModelName) -> Dataset:
         dataset: Dataset = self.run_configuration.train_dataset
@@ -61,10 +62,7 @@ class ComputeBatchSizeCommand:
         flush_gpu_memory()
         return stress_dataset
 
-    def find_max_batch_size(
-        self,
-        dataset: Dataset,
-    ) -> int:
+    def find_max_batch_size(self, dataset: Dataset, ctxt: RunContext) -> int:
         run_configuration: TrainingRunConfiguration = self.run_configuration
         factory_settings = SettingsForTrainingOptionsFactory.get_simple_default()
         training_options: TrainingOptions = factory_settings.to_training_options()
@@ -95,7 +93,7 @@ class ComputeBatchSizeCommand:
 
             try:
                 trainer = create_trainer(model, tokenizer, probe_config, training_options, False)
-                logger.info("Probing batch size %d", batch_size)
+                ctxt.logger.report_message(f"\nProbing Batch Size: {batch_size}\n")
                 if not probe_config.step_size.per_device_batch_size == batch_size:
                     raise ValueError(
                         f"Expected Batch Size: {batch_size}, got {probe_config.step_size.per_device_batch_size}"
@@ -106,7 +104,7 @@ class ComputeBatchSizeCommand:
                 del trainer
                 flush_gpu_memory()
             except torch.cuda.OutOfMemoryError:
-                logger.info("OOM at batch size %d, last good batch size: %d", batch_size, last_good)
+                ctxt.logger.report_message(f"Largest succesfull batch size: {last_good}")
                 del model, tokenizer
                 flush_gpu_memory()
                 return last_good
