@@ -1,12 +1,16 @@
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from datasets import ClassLabel, Dataset, DatasetDict, Value, concatenate_datasets
 from transformers import PreTrainedTokenizerBase
 
 from rules_lawyer_models.core.run_context import RunContext
 from rules_lawyer_models.exploration.token_length import compute_tokens
+from rules_lawyer_models.utils.text_fragments import FragmentID, get_fragment
+
+if TYPE_CHECKING:
+    from evaluation.model_generator import ModelGenerator
 
 
 def split_dataset(
@@ -168,3 +172,27 @@ def union_datasets(a: Dataset, b: Dataset) -> Dataset:
             parts.append(f"only in second: {sorted(only_b)}")
         raise ValueError(f"Column mismatch — {'; '.join(parts)}")
     return concatenate_datasets([a, b])
+
+
+def add_predictions_column(
+    dataset: Dataset,
+    system_prompt_id: FragmentID,
+    content_column_name: str,
+    predictions_column_name: str,
+    generator: ModelGenerator,
+) -> Dataset:
+    """Generate a prediction for every row and add it as a new column.
+
+    Args:
+        dataset: Source dataset.
+        system_prompt_id: Fragment ID for the system prompt.
+        content_column_name: Column containing the user input text.
+        predictions_column_name: Name of the new column to create.
+        generator: A ModelGenerator configured for inference.
+
+    Returns:
+        A new Dataset with the predictions column appended.
+    """
+    system_prompt = get_fragment(system_prompt_id)
+    predictions = [generator.generate(system_prompt, text) for text in dataset[content_column_name]]
+    return dataset.add_column(predictions_column_name, predictions)  # pyright: ignore
