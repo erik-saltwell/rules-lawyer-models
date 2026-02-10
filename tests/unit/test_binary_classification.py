@@ -1,7 +1,6 @@
 from __future__ import annotations
 
-from types import SimpleNamespace
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -160,17 +159,13 @@ class TestMCC:
 
 
 class TestComputeClassificationMetric:
-    def test_delegates_to_collect_and_aggregate(self) -> None:
+    @patch("evaluation.binary_classification._collect_classifications")
+    def test_delegates_to_collect_and_aggregate(self, mock_collect: MagicMock) -> None:
         """Verify compute_classification_metric wires _collect_classifications to the aggregator."""
-        expected_counts = STANDARD
-
-        mock_self = SimpleNamespace(
-            _collect_classifications=MagicMock(return_value=expected_counts),
-        )
+        mock_collect.return_value = STANDARD
         dataset = MagicMock()
 
         result = compute_classification_metric(
-            mock_self,
             dataset,
             "input",
             "ground_truth",
@@ -180,20 +175,16 @@ class TestComputeClassificationMetric:
             accuracy,
         )
 
-        mock_self._collect_classifications.assert_called_once_with(
-            dataset, "input", "ground_truth", "predictions", "positive", str.strip
-        )
+        mock_collect.assert_called_once_with(dataset, "input", "ground_truth", "predictions", "positive", str.strip)
         assert result.metric_name == "accuracy"
         assert result.metric_result == pytest.approx(130 / 160)
 
-    def test_with_f1_aggregator(self) -> None:
+    @patch("evaluation.binary_classification._collect_classifications")
+    def test_with_f1_aggregator(self, mock_collect: MagicMock) -> None:
         counts = _make_counts(tp=40, fp=10, tn=30, fn=20)
-        mock_self = SimpleNamespace(
-            _collect_classifications=MagicMock(return_value=counts),
-        )
+        mock_collect.return_value = counts
 
         result = compute_classification_metric(
-            mock_self,
             MagicMock(),
             "input",
             "ground_truth",

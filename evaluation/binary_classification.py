@@ -15,7 +15,6 @@ class BinaryClassificationResult(IntEnum):
 
 
 def compute_classification_metric(
-    self,
     dataset: Dataset,
     inputs_column_name: str,
     ground_truth_column_name: str,
@@ -24,7 +23,7 @@ def compute_classification_metric(
     clean_prediction: Callable[[str], str],
     aggregate_predictions: Callable[[dict[BinaryClassificationResult, int]], MetricResult],
 ) -> MetricResult:
-    classifications: dict[BinaryClassificationResult, int] = self._collect_classifications(
+    classifications: dict[BinaryClassificationResult, int] = _collect_classifications(
         dataset,
         inputs_column_name,
         ground_truth_column_name,
@@ -37,7 +36,6 @@ def compute_classification_metric(
 
 
 def _collect_classifications(
-    self,
     dataset: Dataset,
     inputs_column_name: str,
     ground_truth_column_name: str,

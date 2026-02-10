@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from datasets import ClassLabel, Dataset, DatasetDict, Value
+from datasets import ClassLabel, Dataset, DatasetDict, Value, concatenate_datasets
 from transformers import PreTrainedTokenizerBase
 
 from rules_lawyer_models.core.run_context import RunContext
@@ -148,3 +148,23 @@ def add_string_label_column(
         return {new_column_name: [None if v is None else str(v) for v in labels]}
 
     return dataset.map(_map_c, batched=True)
+
+
+def union_datasets(a: Dataset, b: Dataset) -> Dataset:
+    """Concatenate two Datasets after validating they share the same columns.
+
+    Raises:
+        ValueError: If the column names differ between the two datasets.
+    """
+    cols_a = set(a.column_names)
+    cols_b = set(b.column_names)
+    if cols_a != cols_b:
+        only_a = cols_a - cols_b
+        only_b = cols_b - cols_a
+        parts: list[str] = []
+        if only_a:
+            parts.append(f"only in first: {sorted(only_a)}")
+        if only_b:
+            parts.append(f"only in second: {sorted(only_b)}")
+        raise ValueError(f"Column mismatch — {'; '.join(parts)}")
+    return concatenate_datasets([a, b])
