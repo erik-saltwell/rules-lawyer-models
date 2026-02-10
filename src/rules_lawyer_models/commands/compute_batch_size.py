@@ -7,18 +7,19 @@ from transformers import PreTrainedTokenizerBase
 from transformers.utils import logging as hf_logging
 
 from rules_lawyer_models.core.run_context import RunContext
-from rules_lawyer_models.data import add_training_column, make_stress_split
-from rules_lawyer_models.data.dataset_helper import add_string_label_column
+from rules_lawyer_models.data import add_string_label_column, add_training_column, make_stress_split
 from rules_lawyer_models.serialization.token_serializer import load_tokenizer_from_hf
 from rules_lawyer_models.training import (
+    EvalationSettings,
+    SettingsForTrainingOptionsFactory,
+    StepSize,
     TrainingLength,
+    TrainingOptions,
     TrainingRunConfiguration,
     create_trainer,
     load_base_model,
     run_training,
 )
-from rules_lawyer_models.training.training_options import EvalationSettings, StepSize, TrainingOptions
-from rules_lawyer_models.training.training_options_factory import SettingsForTrainingOptionsFactory
 from rules_lawyer_models.utils import BaseModelName, flush_gpu_memory
 
 logger = logging.getLogger(__name__)
