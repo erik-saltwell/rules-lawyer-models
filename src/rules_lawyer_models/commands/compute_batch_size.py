@@ -100,7 +100,7 @@ class ComputeBatchSizeCommand:
                     )
                 run_training(model, tokenizer, trainer)
                 last_good = batch_size
-                batch_size *= 2
+                batch_size += 1
                 del trainer
                 flush_gpu_memory()
             except torch.cuda.OutOfMemoryError:
