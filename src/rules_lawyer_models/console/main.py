@@ -15,11 +15,13 @@ from rules_lawyer_models.commands import CommmandProtocol, VerifyTemplateData
 from rules_lawyer_models.commands.compute_batch_size import ComputeBatchSizeCommand
 from rules_lawyer_models.console.rich_logging_protocol import RichConsoleLogger
 from rules_lawyer_models.core import RunContext
-from rules_lawyer_models.training.training_options import FragmentID, TrainingLength, TrainingRunConfiguration
+from rules_lawyer_models.training.training_options import TrainingLength
+from rules_lawyer_models.training.training_run_configuration import TrainingRunConfiguration
 from rules_lawyer_models.utils import CommonPaths
 from rules_lawyer_models.utils.dataset_name import DatasetName
 from rules_lawyer_models.utils.logging_config import configure_logging
 from rules_lawyer_models.utils.model_name import BaseModelName, TargetModelName
+from rules_lawyer_models.utils.text_fragments import FragmentID
 
 load_dotenv()
 configure_logging()
