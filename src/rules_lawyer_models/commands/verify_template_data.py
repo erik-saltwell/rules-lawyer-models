@@ -4,26 +4,65 @@ from datasets import Dataset, DatasetDict
 from transformers import PreTrainedTokenizerBase
 
 from rules_lawyer_models.core import RunContext
-from rules_lawyer_models.data import add_string_label_column, add_templated_column
+from rules_lawyer_models.data import add_string_label_column, add_training_column
 from rules_lawyer_models.serialization import load_dataset_from_hf, load_tokenizer_from_hf
 from rules_lawyer_models.utils import get_fragment
+from rules_lawyer_models.utils.dataset_name import DatasetName
+from rules_lawyer_models.utils.model_name import BaseModelName
+from rules_lawyer_models.utils.text_fragments import FragmentID
 
 from .command_protocol import CommmandProtocol
 
 
 class VerifyTemplateData(CommmandProtocol):
-    def __init__(self, num_rows: int) -> None:
+    def __init__(
+        self,
+        num_rows: int,
+        dataset_name: DatasetName,
+        base_model_name: BaseModelName,
+        system_prompt_id: FragmentID,
+        content_column_name: str,
+        labels_column_name: str,
+        training_column_name: str,
+        eval_column_name: str,
+    ) -> None:
         self.num_rows = num_rows
+        self.dataset_name = dataset_name
+        self.base_model_name = base_model_name
+        self.system_prompt_id = system_prompt_id
+        self.content_column_name = content_column_name
+        self.labels_column_name = labels_column_name
+        self.training_column_name = training_column_name
+        self.eval_column_name = eval_column_name
 
     def execute(self, ctxt: RunContext) -> None:
-        datasets: DatasetDict = load_dataset_from_hf(ctxt.dataset_name)
+        datasets: DatasetDict = load_dataset_from_hf(self.dataset_name)
         dataset: Dataset = datasets["train"]
-        tokenizer: PreTrainedTokenizerBase = load_tokenizer_from_hf(ctxt.base_model_name)
-        dataset = add_string_label_column(dataset, "label", "str_label")
-        dataset = add_templated_column(
-            dataset, "content", "str_label", get_fragment(ctxt.system_prompt_name), tokenizer
+        tokenizer: PreTrainedTokenizerBase = load_tokenizer_from_hf(self.base_model_name)
+        string_labels_column_name = "str_" + self.labels_column_name
+        dataset = add_string_label_column(dataset, self.labels_column_name, string_labels_column_name)
+        # dataset = dataset.take(2)
+        dataset = add_training_column(
+            self.base_model_name,
+            dataset,
+            self.content_column_name,
+            string_labels_column_name,
+            self.training_column_name,
+            get_fragment(self.system_prompt_id),
+            tokenizer,
         )
+        # dataset = add_eval_column(
+        #     self.base_model_name,
+        #     dataset,
+        #     self.content_column_name,
+        #     string_labels_column_name,
+        #     self.eval_column_name,
+        #     get_fragment(self.system_prompt_id),
+        #     tokenizer,
+        # )
 
         for i in range(min(self.num_rows, len(dataset))):
-            ctxt.logger.report_message(f"--- Row {i} ---")
-            ctxt.logger.report_message(dataset[i]["text"])
+            ctxt.logger.report_message(f"--- Row {i} TRAINING ---")
+            ctxt.logger.report_message(dataset[i][self.training_column_name])
+            # txt.logger.report_message(f"--- Row {i} eval ---")
+            # ctxt.logger.report_message(dataset[i][self.eval_column_name])

@@ -1,159 +1,138 @@
+from collections.abc import Callable, Mapping
+
 from datasets import Dataset
 from transformers import PreTrainedTokenizerBase
 
 from rules_lawyer_models.utils.model_name import BaseModelName
 from rules_lawyer_models.utils.text_fragments import FragmentID, get_fragment
 
-model_fragment_map: dict[BaseModelName, FragmentID] = {
+model_training_fragment_map: dict[BaseModelName, FragmentID] = {
+    BaseModelName.QWEN_25_14B_4BIT_BASE: FragmentID.ALPACA_PROMPT_TEMPLATE,
+}
+
+model_eval_fragment_map: dict[BaseModelName, FragmentID] = {
     BaseModelName.QWEN_25_14B_4BIT_BASE: FragmentID.ALPACA_PROMPT_TEMPLATE,
 }
 
 
-def get_template_skeleton(model_name: BaseModelName) -> str:
-    fragment_id = model_fragment_map.get(model_name)
+def _get_training_template(model_name: BaseModelName) -> str:
+    fragment_id = model_training_fragment_map.get(model_name)
     if fragment_id is None:
         raise ValueError(f"No template fragment found for model {model_name}")
     return get_fragment(fragment_id)
 
 
-def base_model_is_instruct(model_name: BaseModelName) -> bool:
-    return model_name not in model_fragment_map
+def _get_eval_template(model_name: BaseModelName) -> str:
+    fragment_id = model_eval_fragment_map.get(model_name)
+    if fragment_id is None:
+        raise ValueError(f"No template fragment found for model {model_name}")
+    return get_fragment(fragment_id)
 
 
-def add_eval_prompt_column_for_instruct_models(
+def _base_model_is_instruct(model_name: BaseModelName) -> bool:
+    return model_name not in model_training_fragment_map
+
+
+def _generate_eos(tokenizer: PreTrainedTokenizerBase) -> str:
+    eos = tokenizer.eos_token
+    if eos is None:
+        raise ValueError("The tokenizer does not have an EOS token defined.")
+    if isinstance(eos, list):
+        eos = eos[0]
+    eos_token: str = eos
+    return eos_token
+
+
+def _apply_simple_template(
+    instruction: str, input: str, output: str, template: str, tokenizer: PreTrainedTokenizerBase, eos: str | None
+) -> str:
+    return_value: str = template.format(instruction, input, output)
+    if eos and not return_value.strip().endswith(eos):
+        return_value = return_value.rstrip() + eos
+    return return_value
+
+
+def _apply_chat_template(
+    instruction: str, input: str, output: str, tokenizer: PreTrainedTokenizerBase, eos: str | None
+) -> str:
+    return_value: str
+    messages = [
+        {"role": "system", "content": instruction},
+        {"role": "user", "content": input},
+    ]
+
+    if output:
+        messages.append({"role": "assistant", "content": output})
+        return_value = str(tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=False))
+        if eos and not return_value.rstrip().endswith(eos):
+            return_value = return_value.rstrip() + eos
+    else:
+        return_value = str(tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True))
+
+    return return_value
+
+
+RowFormatter = Callable[[str, str], str]
+
+
+def _apply_template(
+    data: Mapping[str, list[str]],
+    format_row: RowFormatter,
+    content_column_name: str,
+    labels_column_name: str,
+    new_column_name: str,
+) -> dict[str, list[str]]:
+    inputs = data[content_column_name]
+    outputs = data[labels_column_name]
+    return {new_column_name: [format_row(content, label) for content, label in zip(inputs, outputs, strict=True)]}
+
+
+def add_training_column(
+    model_name: BaseModelName,
     dataset: Dataset,
-    input_column_name: str,
-    output_column_name: str,
-    system_prompt: str,
+    content_column_name: str,
+    labels_column_name: str,
+    training_column_name: str,
+    instruction_prompt: str,
     tokenizer: PreTrainedTokenizerBase,
 ) -> Dataset:
-    EOS_TOKEN = tokenizer.eos_token  # Must add EOS_TOKEN
-    if EOS_TOKEN is None:
-        raise ValueError("The tokenizer does not have an EOS token defined.")
+    eos = _generate_eos(tokenizer)
+    if _base_model_is_instruct(model_name):
 
-    def formatting_prompts_prompt_only_func(examples):
-        inputs = examples[input_column_name]
-        labels = examples[output_column_name]  # your ground-truth: "Question" or "Other"
+        def format_row(inp: str, out: str) -> str:
+            return _apply_chat_template(instruction_prompt, inp, out, tokenizer, eos)
+    else:
+        template = _get_training_template(model_name)
 
-        prompts: list[str] = []
-        for user_input, _label in zip(inputs, labels, strict=True):
-            # Prompt-only messages: NO assistant content included.
-            messages = [
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_input},
-            ]
+        def format_row(inp: str, out: str) -> str:
+            return _apply_simple_template(instruction_prompt, inp, out, template, tokenizer, eos)
 
-            # IMPORTANT:
-            # - add_generation_prompt=True makes the template end with the assistant prefix
-            #   (e.g., "<|assistant|>" or equivalent), ready for generation.
-            prompt = tokenizer.apply_chat_template(
-                messages,
-                tokenize=False,
-                add_generation_prompt=True,
-            )
-
-            prompts.append(str(prompt))
-
-        # Keep the label column for scoring.
-        return {"prompt": prompts, "label": labels}
-
-    # Map the formatted prompts into the dataset for the SFTTrainer
-    dataset = dataset.map(formatting_prompts_prompt_only_func, batched=True)
-
-    return dataset
-
-
-def add_templated_column_for_instruct_models(
-    dataset: Dataset,
-    input_column_name: str,
-    output_column_name: str,
-    system_prompt: str,
-    tokenizer: PreTrainedTokenizerBase,
-) -> Dataset:
-    EOS_TOKEN = tokenizer.eos_token  # Must add EOS_TOKEN
-    if EOS_TOKEN is None:
-        raise ValueError("The tokenizer does not have an EOS token defined.")
-
-    def formatting_prompts_func(examples):
-        inputs = examples[input_column_name]
-        outputs = examples[output_column_name]
-        texts = []
-        for input, output in zip(inputs, outputs, strict=True):
-            # Create a message list suitable for ChatML/Instruct templates
-            messages = [
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": input},
-                {"role": "assistant", "content": output},
-            ]
-
-            # Apply the Qwen 2.5 specific chat template [7, 10, 15, 18]
-            text = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=False)
-
-            # Append EOS token to ensure the model learns boundary termination
-            texts.append(text + EOS_TOKEN)  # pyright: ignore
-        return {"text": texts}
-
-    # Map the formatted prompts into the dataset for the SFTTrainer
-    dataset = dataset.map(formatting_prompts_func, batched=True)
-
-    return dataset
-
-
-def add_templated_column_for_non_instruct_models(
-    dataset: Dataset,
-    skeleton_prompt: str,
-    input_column_name: str,
-    output_column_name: str,
-    system_prompt: str,
-    tokenizer: PreTrainedTokenizerBase,
-) -> Dataset:
-    EOS_TOKEN = tokenizer.eos_token  # Must add EOS_TOKEN
-    if EOS_TOKEN is None:
-        raise ValueError("The tokenizer does not have an EOS token defined.")
-
-    def format_prompts(examples):
-        instructions = [system_prompt for _ in examples[input_column_name]]
-        inputs = examples[input_column_name]
-        outputs = examples[output_column_name]
-        texts = []
-        for instruction, input, output in zip(instructions, inputs, outputs, strict=True):
-            # Must add EOS_TOKEN, otherwise your generation will go on forever!
-            text: str = skeleton_prompt.format(instruction, input, output)
-            text = text + EOS_TOKEN  # pyright: ignore
-            texts.append(text)
-        return {
-            "text": texts,
-        }
-
-    dataset = dataset.map(
-        format_prompts,
+    return dataset.map(
+        lambda data: _apply_template(data, format_row, content_column_name, labels_column_name, training_column_name),
         batched=True,
     )
-    return dataset
 
 
-def add_templated_column(
+def add_eval_column(
+    model_name: BaseModelName,
     dataset: Dataset,
-    input_column_name: str,
-    output_column_name: str,
-    system_prompt: str,
+    content_column_name: str,
+    labels_column_name: str,
+    eval_column_name: str,
+    instruction_prompt: str,
     tokenizer: PreTrainedTokenizerBase,
 ) -> Dataset:
-    if base_model_is_instruct(tokenizer.name_or_path):
-        return add_templated_column_for_instruct_models(
-            dataset=dataset,
-            input_column_name=input_column_name,
-            output_column_name=output_column_name,
-            system_prompt=system_prompt,
-            tokenizer=tokenizer,
-        )
+    if _base_model_is_instruct(model_name):
+
+        def format_row(inp: str, _out: str) -> str:
+            return _apply_chat_template(instruction_prompt, inp, "", tokenizer, None)
     else:
-        skeleton_prompt = get_template_skeleton(BaseModelName(tokenizer.name_or_path))
-        return add_templated_column_for_non_instruct_models(
-            dataset=dataset,
-            skeleton_prompt=skeleton_prompt,
-            input_column_name=input_column_name,
-            output_column_name=output_column_name,
-            system_prompt=system_prompt,
-            tokenizer=tokenizer,
-        )
+        template = _get_eval_template(model_name)
+
+        def format_row(inp: str, _out: str) -> str:
+            return _apply_simple_template(instruction_prompt, inp, "", template, tokenizer, None)
+
+    return dataset.map(
+        lambda data: _apply_template(data, format_row, content_column_name, labels_column_name, eval_column_name),
+        batched=True,
+    )

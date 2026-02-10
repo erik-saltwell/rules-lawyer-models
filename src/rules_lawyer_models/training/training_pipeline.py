@@ -1,48 +1,33 @@
 from unsloth import FastLanguageModel  # isort: skip
-import os
+from typing import cast
 
-import wandb
 from transformers import (
     PreTrainedModel,
     PreTrainedTokenizerBase,
 )
+from transformers.trainer_utils import TrainOutput
 from trl.trainer.sft_config import SFTConfig
 from trl.trainer.sft_trainer import SFTTrainer
 
-from rules_lawyer_models.core.run_context import RunContext
-from rules_lawyer_models.training.run_configuration import RunConfiguration
-from rules_lawyer_models.training.training_options import TrainingOptions
-from rules_lawyer_models.training.training_options_factory import (
-    SettingsForTrainingOptionsFactory,
-    create_training_options,
-)
+from rules_lawyer_models.training.training_options import TrainingOptions, TrainingRunConfiguration
 
 
-def run_pipeline(
-    run_configuration: RunConfiguration,
-    factory_settings: SettingsForTrainingOptionsFactory,
-    ctxt: RunContext,
-) -> None:
-    os.environ["API_KEY"] = "abc123"
-    os.environ["WANDB_LOG_MODEL"] = "checkpoint"
-    os.environ["WANDB_PROJECT"] = ctxt.model_name
-    run_name: str = ctxt.wandb_run_name
-
-    wandb.login()
-
-    training_options: TrainingOptions = create_training_options(factory_settings)
-
+def load_base_model(
+    run_configuration: TrainingRunConfiguration,
+    training_options: TrainingOptions,
+    base_model_name: str,
+) -> tuple[PreTrainedModel, PreTrainedTokenizerBase]:
     model: PreTrainedModel
     tokenizer: PreTrainedTokenizerBase
     model, tokenizer = FastLanguageModel.from_pretrained(
-        model_name=ctxt.base_model_name,
-        max_seq_length=run_configuration.max_sequence_lenth,
+        model_name=base_model_name,
+        max_seq_length=run_configuration.step_size.max_sequence_length,
         dtype=run_configuration.dtype,
         load_in_4bit=run_configuration.load_in_4bit,
         use_gradient_checkpointing="unsloth",
     )
 
-    loftq_config = None
+    loftq_config: dict[str, int] | None = None
     if training_options.use_loftq:
         loftq_config = {"loftq_bits": training_options.loftq_bits, "loftq_iter": training_options.loftq_iter}
 
@@ -59,39 +44,54 @@ def run_pipeline(
         loftq_config=loftq_config,
     )
 
-    trainer = SFTTrainer(
+    return (model, tokenizer)
+
+
+def create_trainer(
+    model: PreTrainedModel,
+    tokenizer: PreTrainedTokenizerBase,
+    run_configuration: TrainingRunConfiguration,
+    training_options: TrainingOptions,
+    report_to_wandb: bool,
+) -> SFTTrainer:
+    config: SFTConfig = run_configuration.create_sft_config(training_options, report_to_wandb)
+    trainer: SFTTrainer = SFTTrainer(
         model=model,
         processing_class=tokenizer,
         train_dataset=run_configuration.train_dataset,
-        eval_dataset=run_configuration.eval_dataset,
-        args=SFTConfig(
-            dataset_text_field=run_configuration.dataset_text_column_name,
-            max_length=run_configuration.max_sequence_lenth,
-            packing=run_configuration.packing,
-            per_device_train_batch_size=run_configuration.per_device_train_batch_size,
-            gradient_accumulation_steps=run_configuration.gradient_accumulation_steps,
-            warmup_ratio=training_options.warmup_ratio,
-            max_steps=-1
-            if not run_configuration.training_length.use_steps
-            else run_configuration.training_length.max_steps,
-            num_train_epochs=run_configuration.training_length.max_epochs
-            if not run_configuration.training_length.use_steps
-            else -1,
-            learning_rate=training_options.learning_rate,
-            optim=training_options.optim,
-            weight_decay=training_options.weight_decay,
-            lr_scheduler_type=training_options.lr_schedular_type,
-            output_dir=run_configuration.output_dir,
-            seed=run_configuration.seed,
-            logging_steps=10,
-            save_steps=run_configuration.eval_steps,
-            eval_strategy="steps",
-            eval_steps=run_configuration.eval_steps,
-            # makes eval cheaper on VRAM
-            fp16_full_eval=True,
-            report_to="wandb",  # enable logging to W&B
-            run_name=run_name,  # name of the W&B run (optional)
-        ),
+        eval_dataset=run_configuration.evaluation_settings.evaluation_dataset,
+        args=config,
     )
+    return trainer
 
-    _ = trainer.train()
+
+def run_training(model: PreTrainedModel, tokenizer: PreTrainedTokenizerBase, trainer: SFTTrainer) -> TrainOutput:
+    training_output = trainer.train()
+    return cast(TrainOutput, training_output)
+
+
+# def run_pipeline(
+#     run_configuration: TrainingRunConfiguration,
+#     factory_settings: SettingsForTrainingOptionsFactory,
+#     ctxt: RunContext,
+# ) -> None:
+#     training_options: TrainingOptions = create_training_options(factory_settings)
+
+#     os.environ["WANDB_LOG_MODEL"] = "checkpoint"
+#     os.environ["WANDB_PROJECT"] = run_configuration.target_model_name
+
+#     wandb.login()
+#     config: dict[str, Any] = {
+#         "training_options": training_options.to_dict(),
+#         "run_configuration": run_configuration.to_dict(),
+#     }
+
+#     with wandb.init(project=run_configuration.target_model_name, config=config) as _run:
+#         model: PreTrainedModel
+#         tokenizer: PreTrainedTokenizerBase
+#         trainer: SFTTrainer
+#         model, tokenizer = load_base_model(run_configuration, training_options, run_configuration.base_model_name)
+#         trainer = create_trainer(
+#             model, tokenizer, run_configuration, training_options, True, run_configuration.target_model_name
+#         )
+#         run_training(model, tokenizer, trainer)

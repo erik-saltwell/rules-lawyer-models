@@ -1,6 +1,8 @@
 # src/reddit_rpg_miner/cli/main.py
 from __future__ import annotations
 
+import unsloth  # isort: skip  # Must precede all transformers imports
+
 from importlib.metadata import PackageNotFoundError, metadata
 from importlib.metadata import version as dist_version
 
@@ -10,17 +12,18 @@ from dotenv import load_dotenv
 from rich.console import Console
 
 from rules_lawyer_models.commands import CommmandProtocol, VerifyTemplateData
-from rules_lawyer_models.commands.analyze_sequence_lengths import AnalyzeSequenceLengths
+from rules_lawyer_models.commands.compute_batch_size import ComputeBatchSizeCommand
 from rules_lawyer_models.console.rich_logging_protocol import RichConsoleLogger
 from rules_lawyer_models.core import RunContext
+from rules_lawyer_models.training.training_options import FragmentID, TrainingLength, TrainingRunConfiguration
 from rules_lawyer_models.utils import CommonPaths
 from rules_lawyer_models.utils.dataset_name import DatasetName
 from rules_lawyer_models.utils.logging_config import configure_logging
-from rules_lawyer_models.utils.model_name import BaseModelName
-from rules_lawyer_models.utils.text_fragments import FragmentID
+from rules_lawyer_models.utils.model_name import BaseModelName, TargetModelName
 
 load_dotenv()
 configure_logging()
+print(unsloth.__version__)
 
 
 def current_command_name() -> str:
@@ -29,7 +32,7 @@ def current_command_name() -> str:
     return ctx.command.name
 
 
-def check_all_erors(errors: list[str], console: Console) -> None:
+def check_all_errors(errors: list[str], console: Console) -> None:
     if errors:
         for error in errors:
             console.print(f"[red]Error:[/red] {error}")
@@ -48,14 +51,48 @@ def test() -> None:
     """Simple smoke test command."""
     console = Console()
     logger = RichConsoleLogger(console)
-    paths = CommonPaths("reddit_rpg_post_classifier")
+    paths = CommonPaths(DatasetName.REDDIT_RPG_POST_CLASSIFICATION)
     ctxt: RunContext = RunContext(paths, logger)
-    ctxt.base_model_name = BaseModelName.QWEN_25_3B_05BIT_INSTRUCT
-    ctxt.dataset_name = DatasetName.REDDIT_RPG_POST_CLASSIFICATION
-    ctxt.system_prompt_name = FragmentID.RPG_POST_CLASSIFICATION_PROMPT
 
-    command: CommmandProtocol = AnalyzeSequenceLengths()
-    command.execute(ctxt)
+    dataset_name = DatasetName.REDDIT_RPG_POST_CLASSIFICATION
+    base_model_name = BaseModelName.QWEN_25_3B_05BIT_INSTRUCT
+    system_prompt_id = FragmentID.RPG_POST_CLASSIFICATION_PROMPT
+    target_model_name: TargetModelName = TargetModelName.REDDIT_RPG_POST_CLASSIFICATION
+
+    run_configuration: TrainingRunConfiguration = TrainingRunConfiguration.construct_base(
+        dataset_name, "train", "text", base_model_name, target_model_name, TrainingLength(True, 1), system_prompt_id
+    )
+
+    # command: CommmandProtocol = VerifyTemplateData(
+    #     1, dataset_name, base_model_name, system_prompt_id, "content", "label", "text", "eval"
+    # )
+
+    # command.execute(ctxt)
+
+    # ctxt.logger.report_message(" ")
+
+    # analyze_seq_command: CommmandProtocol = AnalyzeSequenceLengths(
+    #     dataset_name, base_model_name, system_prompt_id, "content", "label", "text"
+    # )
+
+    # analyze_seq_command.execute(ctxt)
+
+    # ctxt.logger.report_message(" ")
+
+    compute_batch_command: CommmandProtocol = ComputeBatchSizeCommand(run_configuration, 200, "content", "label", 1024)
+    compute_batch_command.execute(ctxt)
+
+    # run_configuration: TrainingRunConfiguration = TrainingRunConfiguration.construct_base(
+    #     DatasetName.REDDIT_RPG_POST_CLASSIFICATION,
+    #     "train",
+    #     BaseModelName.QWEN_25_3B_05BIT_INSTRUCT,
+    #     TargetModelName.REDDIT_RPG_POST_CLASSIFICATION,
+    #     TrainingLength(True, 50),
+    #     FragmentID.RPG_POST_CLASSIFICATION_PROMPT,
+    # )
+
+    # command: ComputeBatchSizeCommand = ComputeBatchSizeCommand(run_configuration, 100, "content", "label")
+    # command.execute(ctxt)
 
 
 @app.command("verify-template")
@@ -65,7 +102,12 @@ def verify_template() -> None:
     logger = RichConsoleLogger(console)
     paths = CommonPaths("reddit_rpg_post_classifier")
     ctxt: RunContext = RunContext(paths, logger)
-    command: CommmandProtocol = VerifyTemplateData(num_rows=5)
+    dataset_name = DatasetName.REDDIT_RPG_POST_CLASSIFICATION
+    base_model_name = BaseModelName.QWEN_25_3B_05BIT_INSTRUCT
+    system_prompt_id = FragmentID.RPG_POST_CLASSIFICATION_PROMPT
+    command: CommmandProtocol = VerifyTemplateData(
+        1, dataset_name, base_model_name, system_prompt_id, "content", "label", "text", "eval"
+    )
     command.execute(ctxt)
 
 

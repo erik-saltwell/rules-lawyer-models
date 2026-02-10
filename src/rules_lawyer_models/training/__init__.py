@@ -1,13 +1,14 @@
-from .run_configuration import RunConfiguration, TrainingLength
-from .training_options import TrainingOptions
+from .training_options import TrainingLength, TrainingOptions, TrainingRunConfiguration
 from .training_options_factory import SettingsForTrainingOptionsFactory, create_training_options
-from .training_pipeline import run_pipeline
+from .training_pipeline import create_trainer, load_base_model, run_training
 
 __all__ = [
-    "RunConfiguration",
+    "TrainingRunConfiguration",
     "TrainingLength",
     "TrainingOptions",
     "SettingsForTrainingOptionsFactory",
     "create_training_options",
-    "run_pipeline",
+    "create_trainer",
+    "load_base_model",
+    "run_training",
 ]

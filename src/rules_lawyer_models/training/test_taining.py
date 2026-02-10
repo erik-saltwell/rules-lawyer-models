@@ -1,23 +1,19 @@
 from datasets import Dataset
 
 from rules_lawyer_models.core.run_context import RunContext
-from rules_lawyer_models.training.run_configuration import RunConfiguration, TrainingLength
-from rules_lawyer_models.training.training_options_factory import (
-    SettingsForTrainingOptionsFactory,
-)
-from rules_lawyer_models.training.training_pipeline import run_pipeline
 
 
 def perform_test_run(ctxt: RunContext, training_dataset: Dataset) -> None:
-    run_config = RunConfiguration(
-        train_dataset=training_dataset,
-        eval_dataset=training_dataset,
-        model_name=ctxt.base_model_name,
-        training_length=TrainingLength(use_steps=True, max_steps=102),
-    )
+    pass
+    # run_config = RunConfiguration(
+    #     train_dataset=training_dataset,
+    #     eval_dataset=training_dataset,
+    #     model_name=ctxt.base_model_name,
+    #     training_length=TrainingLength(use_steps=True, max_steps=102),
+    # )
 
-    factory_settings: SettingsForTrainingOptionsFactory = SettingsForTrainingOptionsFactory.get_simple_default()
-    run_pipeline(run_config, factory_settings, ctxt)
+    # factory_settings: SettingsForTrainingOptionsFactory = SettingsForTrainingOptionsFactory.get_simple_default()
+    # run_pipeline(run_config, factory_settings, ctxt)
 
     # model, tokenizer = FastLanguageModel.from_pretrained(
     #     # Can select any from the below:

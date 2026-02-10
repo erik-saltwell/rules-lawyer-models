@@ -10,5 +10,5 @@ class BaseModelName(enum.StrEnum):
 
 
 class TargetModelName(enum.StrEnum):
-    REDDIT_RPG_POST_CLASSIFICATION = "reddit_rpg_post_classification_qwen_25_14b_4bit"
+    REDDIT_RPG_POST_CLASSIFICATION = "reddit_rpg_post_classification"
     NONE = "none"

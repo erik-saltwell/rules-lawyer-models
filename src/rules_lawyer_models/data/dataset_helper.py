@@ -85,6 +85,11 @@ def make_stress_split(
     return dataset
 
 
+def take(dataset: Dataset, count: int) -> Dataset:
+    """Return a new Dataset with at most *count* records from the start."""
+    return dataset.select(range(min(count, len(dataset))))
+
+
 def add_string_label_column(
     dataset: Dataset,
     classlabel_column_name: str,

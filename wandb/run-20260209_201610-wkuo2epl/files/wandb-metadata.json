@@ -1,0 +1,41 @@
+{
+  "os": "Linux-6.14.0-37-generic-x86_64-with-glibc2.39",
+  "python": "CPython 3.11.14",
+  "startedAt": "2026-02-10T04:16:10.361557Z",
+  "args": [
+    "test"
+  ],
+  "program": "-m rules_lawyer_models.__main__",
+  "git": {
+    "remote": "git@github.com:erik-saltwell/rules-lawyer-models.git",
+    "commit": "8b426073a3529b26d3a78883e2e8b9e6cf1b11f6"
+  },
+  "email": "erik.saltwell@gmail.com",
+  "root": "/home/eriksalt/proj/rules-lawyer-models",
+  "host": "meatwad",
+  "executable": "/home/eriksalt/proj/rules-lawyer-models/.venv/bin/python",
+  "cpu_count": 32,
+  "cpu_count_logical": 64,
+  "gpu": "NVIDIA GeForce RTX 3080",
+  "gpu_count": 1,
+  "disk": {
+    "/": {
+      "total": "2013991550976",
+      "used": "237981597696"
+    }
+  },
+  "memory": {
+    "total": "134891085824"
+  },
+  "gpu_nvidia": [
+    {
+      "name": "NVIDIA GeForce RTX 3080",
+      "memoryTotal": "10737418240",
+      "cudaCores": 8704,
+      "architecture": "Ampere",
+      "uuid": "GPU-6e84557f-fe2d-3027-2d34-aec86543c7d6"
+    }
+  ],
+  "cudaVersion": "13.0",
+  "writerId": "o1f06nlho8w6xozpudugtouyyzseoiel"
+}
