@@ -3,34 +3,9 @@ from collections.abc import Callable, Mapping
 from datasets import Dataset
 from transformers import PreTrainedTokenizerBase
 
+from rules_lawyer_models.utils.model_data import ModelData, get_model_data
 from rules_lawyer_models.utils.model_name import BaseModelName
-from rules_lawyer_models.utils.text_fragments import FragmentID, get_fragment
-
-model_training_fragment_map: dict[BaseModelName, FragmentID] = {
-    BaseModelName.QWEN_25_14B_4BIT_BASE: FragmentID.ALPACA_PROMPT_TEMPLATE,
-}
-
-model_eval_fragment_map: dict[BaseModelName, FragmentID] = {
-    BaseModelName.QWEN_25_14B_4BIT_BASE: FragmentID.ALPACA_PROMPT_TEMPLATE,
-}
-
-
-def _get_training_template(model_name: BaseModelName) -> str:
-    fragment_id = model_training_fragment_map.get(model_name)
-    if fragment_id is None:
-        raise ValueError(f"No template fragment found for model {model_name}")
-    return get_fragment(fragment_id)
-
-
-def _get_eval_template(model_name: BaseModelName) -> str:
-    fragment_id = model_eval_fragment_map.get(model_name)
-    if fragment_id is None:
-        raise ValueError(f"No template fragment found for model {model_name}")
-    return get_fragment(fragment_id)
-
-
-def _base_model_is_instruct(model_name: BaseModelName) -> bool:
-    return model_name not in model_training_fragment_map
+from rules_lawyer_models.utils.text_fragments import get_fragment
 
 
 def _generate_eos(tokenizer: PreTrainedTokenizerBase) -> str:
@@ -97,12 +72,15 @@ def add_training_column(
     tokenizer: PreTrainedTokenizerBase,
 ) -> Dataset:
     eos = _generate_eos(tokenizer)
-    if _base_model_is_instruct(model_name):
+    model_data: ModelData = get_model_data(model_name)
+    if model_data.is_instruct:
 
         def format_row(inp: str, out: str) -> str:
             return _apply_chat_template(instruction_prompt, inp, out, tokenizer, eos)
     else:
-        template = _get_training_template(model_name)
+        if model_data.training_fragment_id is None:
+            raise ValueError(f"No training template fragment for base model {model_name}")
+        template = get_fragment(model_data.training_fragment_id)
 
         def format_row(inp: str, out: str) -> str:
             return _apply_simple_template(instruction_prompt, inp, out, template, tokenizer, eos)
@@ -122,12 +100,15 @@ def add_eval_column(
     instruction_prompt: str,
     tokenizer: PreTrainedTokenizerBase,
 ) -> Dataset:
-    if _base_model_is_instruct(model_name):
+    model_data: ModelData = get_model_data(model_name)
+    if model_data.is_instruct:
 
         def format_row(inp: str, _out: str) -> str:
             return _apply_chat_template(instruction_prompt, inp, "", tokenizer, None)
     else:
-        template = _get_eval_template(model_name)
+        if model_data.eval_fragment_id is None:
+            raise ValueError(f"No eval template fragment for base model {model_name}")
+        template = get_fragment(model_data.eval_fragment_id)
 
         def format_row(inp: str, _out: str) -> str:
             return _apply_simple_template(instruction_prompt, inp, "", template, tokenizer, None)

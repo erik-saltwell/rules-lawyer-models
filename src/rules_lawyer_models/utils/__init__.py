@@ -2,6 +2,7 @@ from .common_paths import CommonPaths
 from .dataset_name import DatasetName
 from .flush_gpu_memory import flush_gpu_memory
 from .logging_protocol import LoggingProtocol
+from .model_data import ModelData, get_model_data
 from .model_name import BaseModelName, TargetModelName
 from .text_fragments import FragmentID, get_fragment
 
@@ -10,8 +11,10 @@ __all__ = [
     "CommonPaths",
     "DatasetName",
     "LoggingProtocol",
+    "ModelData",
     "TargetModelName",
     "FragmentID",
     "get_fragment",
+    "get_model_data",
     "flush_gpu_memory",
 ]

@@ -8,8 +8,10 @@ from transformers import (
 from transformers.trainer_utils import TrainOutput
 from trl.trainer.sft_config import SFTConfig
 from trl.trainer.sft_trainer import SFTTrainer
+from unsloth.chat_templates import train_on_responses_only
 
 from rules_lawyer_models.training.training_options import TrainingOptions, TrainingRunConfiguration
+from rules_lawyer_models.utils import get_model_data
 
 
 def load_base_model(
@@ -62,6 +64,13 @@ def create_trainer(
         eval_dataset=run_configuration.evaluation_settings.evaluation_dataset,
         args=config,
     )
+    if run_configuration.train_on_outputs_only:
+        model_data = get_model_data(run_configuration.base_model_name)
+        trainer = train_on_responses_only(
+            trainer=trainer,
+            instruction_part=model_data.instruction_seperator,
+            response_part=model_data.response_seperator,
+        )
     return trainer
 
 

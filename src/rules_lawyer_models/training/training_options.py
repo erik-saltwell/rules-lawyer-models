@@ -140,6 +140,7 @@ class TrainingRunConfiguration:
     training_length: TrainingLength
     evaluation_settings: EvalationSettings
 
+    train_on_outputs_only: bool = False
     dtype: str | None = None
     load_in_4bit: bool = True
     packing: bool = False
