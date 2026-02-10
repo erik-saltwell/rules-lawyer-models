@@ -9,11 +9,11 @@ from rules_lawyer_models.data.template_helper import (
     _apply_chat_template,
     _apply_simple_template,
     _apply_template,
-    _base_model_is_instruct,
     _generate_eos,
     add_eval_column,
     add_training_column,
 )
+from rules_lawyer_models.utils.model_data import get_model_data
 from rules_lawyer_models.utils.model_name import BaseModelName
 
 # ── Constants ────────────────────────────────────────────────────
@@ -203,10 +203,10 @@ class TestApplyTemplate:
 
 class TestBaseModelIsInstruct:
     def test_instruct_model_returns_true(self) -> None:
-        assert _base_model_is_instruct(INSTRUCT_MODEL) is True
+        assert get_model_data(INSTRUCT_MODEL).is_instruct is True
 
     def test_base_model_returns_false(self) -> None:
-        assert _base_model_is_instruct(NON_INSTRUCT_MODEL) is False
+        assert get_model_data(NON_INSTRUCT_MODEL).is_instruct is False
 
 
 # ── 6. add_training_column — instruct path ──────────────────────
@@ -265,7 +265,7 @@ class TestAddTrainingColumnInstruct:
 class TestAddTrainingColumnNonInstruct:
     def test_adds_named_column(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setattr(
-            "rules_lawyer_models.data.template_helper._get_training_template",
+            "rules_lawyer_models.data.template_helper.get_fragment",
             lambda _: "{} {} {}",
         )
         ds = Dataset.from_dict({"content": ["hello"], "label": ["world"]})
@@ -277,7 +277,7 @@ class TestAddTrainingColumnNonInstruct:
 
     def test_uses_skeleton_template(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setattr(
-            "rules_lawyer_models.data.template_helper._get_training_template",
+            "rules_lawyer_models.data.template_helper.get_fragment",
             lambda _: "[{};{};{}]",
         )
         ds = Dataset.from_dict({"content": ["inp"], "label": ["out"]})
@@ -289,7 +289,7 @@ class TestAddTrainingColumnNonInstruct:
 
     def test_eos_appended(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setattr(
-            "rules_lawyer_models.data.template_helper._get_training_template",
+            "rules_lawyer_models.data.template_helper.get_fragment",
             lambda _: "{} {} {}",
         )
         ds = Dataset.from_dict({"content": ["a"], "label": ["b"]})
@@ -301,7 +301,7 @@ class TestAddTrainingColumnNonInstruct:
 
     def test_preserves_original_columns(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setattr(
-            "rules_lawyer_models.data.template_helper._get_training_template",
+            "rules_lawyer_models.data.template_helper.get_fragment",
             lambda _: "{} {} {}",
         )
         ds = Dataset.from_dict({"content": ["A"], "label": ["B"]})
@@ -364,7 +364,7 @@ class TestAddEvalColumnInstruct:
 class TestAddEvalColumnNonInstruct:
     def test_adds_named_column(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setattr(
-            "rules_lawyer_models.data.template_helper._get_eval_template",
+            "rules_lawyer_models.data.template_helper.get_fragment",
             lambda _: "{} {} {}",
         )
         ds = Dataset.from_dict({"content": ["hello"], "label": ["world"]})
@@ -376,7 +376,7 @@ class TestAddEvalColumnNonInstruct:
 
     def test_no_eos_appended(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setattr(
-            "rules_lawyer_models.data.template_helper._get_eval_template",
+            "rules_lawyer_models.data.template_helper.get_fragment",
             lambda _: "{} {} {}",
         )
         ds = Dataset.from_dict({"content": ["a"], "label": ["b"]})
