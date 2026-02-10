@@ -4,7 +4,7 @@ from typing import Protocol
 
 from datasets import Dataset
 
-from evaluation.metric_result import MetricResult
+from .metric_result import MetricResult
 
 
 class MetricProtocol(Protocol):

@@ -2,8 +2,9 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 
-from evaluation.metric_result import MetricResult
 from rules_lawyer_models.utils.logging_protocol import LoggingProtocol
+
+from .metric_result import MetricResult
 
 
 class LoggerMetricsReporter:

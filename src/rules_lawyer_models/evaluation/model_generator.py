@@ -29,6 +29,19 @@ class ModelGenerator:
         self._clean_prediction = clean_prediction
         self._max_new_tokens = max_new_tokens
 
+    def _build_prompt(self, system_prompt: str, user_input: str) -> str:
+        messages: list[dict[str, str]] = [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_input},
+        ]
+        return str(
+            self._tokenizer.apply_chat_template(
+                messages,
+                tokenize=False,
+                add_generation_prompt=True,
+            )
+        )
+
     def generate(self, system_prompt: str, user_input: str) -> str:
         prompt = self._build_prompt(system_prompt, user_input)
         input_ids = torch.tensor(
@@ -47,16 +60,3 @@ class ModelGenerator:
         generated_tokens = outputs[0][input_ids.shape[1] :]
         raw_output: str = self._tokenizer.decode(generated_tokens, skip_special_tokens=True)
         return self._clean_prediction(raw_output)
-
-    def _build_prompt(self, system_prompt: str, user_input: str) -> str:
-        messages: list[dict[str, str]] = [
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_input},
-        ]
-        return str(
-            self._tokenizer.apply_chat_template(
-                messages,
-                tokenize=False,
-                add_generation_prompt=True,
-            )
-        )

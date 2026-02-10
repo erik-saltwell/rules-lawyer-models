@@ -4,7 +4,7 @@ from typing import Any, cast
 
 from datasets import Dataset
 
-from evaluation.metric_result import MetricResult
+from .metric_result import MetricResult
 
 
 class BinaryClassificationResult(IntEnum):
@@ -12,27 +12,6 @@ class BinaryClassificationResult(IntEnum):
     FALSE_POSITIVE = auto()
     TRUE_NEGATIVE = auto()
     FALSE_NEGATIVE = auto()
-
-
-def compute_classification_metric(
-    dataset: Dataset,
-    inputs_column_name: str,
-    ground_truth_column_name: str,
-    predictions_column_name: str,
-    positive_class: str,
-    clean_prediction: Callable[[str], str],
-    aggregate_predictions: Callable[[dict[BinaryClassificationResult, int]], MetricResult],
-) -> MetricResult:
-    classifications: dict[BinaryClassificationResult, int] = _collect_classifications(
-        dataset,
-        inputs_column_name,
-        ground_truth_column_name,
-        predictions_column_name,
-        positive_class,
-        clean_prediction,
-    )
-    result: MetricResult = aggregate_predictions(classifications)
-    return result
 
 
 def _collect_classifications(
@@ -73,6 +52,27 @@ def _collect_classifications(
                     classifications[BinaryClassificationResult.FALSE_NEGATIVE] + 1
                 )
     return classifications
+
+
+def compute_classification_metric(
+    dataset: Dataset,
+    inputs_column_name: str,
+    ground_truth_column_name: str,
+    predictions_column_name: str,
+    positive_class: str,
+    clean_prediction: Callable[[str], str],
+    aggregate_predictions: Callable[[dict[BinaryClassificationResult, int]], MetricResult],
+) -> MetricResult:
+    classifications: dict[BinaryClassificationResult, int] = _collect_classifications(
+        dataset,
+        inputs_column_name,
+        ground_truth_column_name,
+        predictions_column_name,
+        positive_class,
+        clean_prediction,
+    )
+    result: MetricResult = aggregate_predictions(classifications)
+    return result
 
 
 _C = dict[BinaryClassificationResult, int]

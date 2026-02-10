@@ -11,7 +11,7 @@ from rules_lawyer_models.exploration.token_length import compute_tokens
 from rules_lawyer_models.utils.text_fragments import FragmentID, get_fragment
 
 if TYPE_CHECKING:
-    from evaluation.model_generator import ModelGenerator
+    from rules_lawyer_models.evaluation.model_generator import ModelGenerator
 
 
 def split_dataset(

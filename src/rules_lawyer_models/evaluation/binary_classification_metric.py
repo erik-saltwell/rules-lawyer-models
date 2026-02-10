@@ -5,11 +5,11 @@ from dataclasses import dataclass
 
 from datasets import Dataset
 
-from evaluation.binary_classification import (
+from .binary_classification import (
     BinaryClassificationResult,
     compute_classification_metric,
 )
-from evaluation.metric_result import MetricResult
+from .metric_result import MetricResult
 
 
 @dataclass(frozen=True)

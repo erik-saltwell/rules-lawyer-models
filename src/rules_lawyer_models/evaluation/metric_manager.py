@@ -5,11 +5,12 @@ from collections.abc import Callable, Iterable
 from datasets import Dataset
 from transformers import PreTrainedModel, PreTrainedTokenizerBase
 
-from evaluation.metric_protocol import MetricProtocol
-from evaluation.metric_result import MetricResult
-from evaluation.model_generator import ModelGenerator
 from rules_lawyer_models.data.dataset_helper import add_predictions_column
 from rules_lawyer_models.utils.text_fragments import FragmentID
+
+from .metric_protocol import MetricProtocol
+from .metric_result import MetricResult
+from .model_generator import ModelGenerator
 
 
 class MetricsManager:

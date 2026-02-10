@@ -3,7 +3,8 @@ from __future__ import annotations
 from collections.abc import Iterable
 
 import wandb
-from evaluation.metric_result import MetricResult
+
+from .metric_result import MetricResult
 
 
 class WandbMetricsReporter:

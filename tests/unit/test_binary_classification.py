@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from evaluation.binary_classification import (
+from rules_lawyer_models.evaluation import (
     BinaryClassificationResult,
     accuracy,
     compute_classification_metric,
@@ -159,7 +159,7 @@ class TestMCC:
 
 
 class TestComputeClassificationMetric:
-    @patch("evaluation.binary_classification._collect_classifications")
+    @patch("rules_lawyer_models.evaluation.binary_classification._collect_classifications")
     def test_delegates_to_collect_and_aggregate(self, mock_collect: MagicMock) -> None:
         """Verify compute_classification_metric wires _collect_classifications to the aggregator."""
         mock_collect.return_value = STANDARD
@@ -179,7 +179,7 @@ class TestComputeClassificationMetric:
         assert result.metric_name == "accuracy"
         assert result.metric_result == pytest.approx(130 / 160)
 
-    @patch("evaluation.binary_classification._collect_classifications")
+    @patch("rules_lawyer_models.evaluation.binary_classification._collect_classifications")
     def test_with_f1_aggregator(self, mock_collect: MagicMock) -> None:
         counts = _make_counts(tp=40, fp=10, tn=30, fn=20)
         mock_collect.return_value = counts

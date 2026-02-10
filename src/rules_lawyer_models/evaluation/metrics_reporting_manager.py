@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 
-from evaluation.metric_reporting import MetricsReportingProtocol
-from evaluation.metric_result import MetricResult
+from .metric_reporting_protocol import MetricsReportingProtocol
+from .metric_result import MetricResult
 
 
 class MetricsReportingManager:
