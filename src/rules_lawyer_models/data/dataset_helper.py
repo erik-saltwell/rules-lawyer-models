@@ -8,7 +8,7 @@ from transformers import PreTrainedTokenizerBase
 
 from rules_lawyer_models.core.run_context import RunContext
 from rules_lawyer_models.exploration.token_length import compute_tokens
-from rules_lawyer_models.utils.text_fragments import FragmentID, get_fragment
+from rules_lawyer_models.utils import FragmentID, get_fragment
 
 if TYPE_CHECKING:
     from rules_lawyer_models.evaluation.model_generator import ModelGenerator

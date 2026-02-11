@@ -12,16 +12,14 @@ from dotenv import load_dotenv
 from rich.console import Console
 
 from rules_lawyer_models.commands import CommmandProtocol, VerifyTemplateData
+from rules_lawyer_models.commands.integration_test_command import IntegrationTestCommand
 from rules_lawyer_models.console.rich_logging_protocol import RichConsoleLogger
 from rules_lawyer_models.core import RunContext
-from rules_lawyer_models.training import TrainingLength
-from rules_lawyer_models.training.training_run_configuration import TrainingRunConfiguration
 from rules_lawyer_models.utils import (
     BaseModelName,
     CommonPaths,
     DatasetName,
     FragmentID,
-    TargetModelName,
     configure_logging,
 )
 
@@ -58,16 +56,8 @@ def test() -> None:
     paths = CommonPaths(DatasetName.IMDB_TEST)
     ctxt: RunContext = RunContext(paths, logger)
 
-    dataset_name = DatasetName.IMDB_TEST
-    base_model_name = BaseModelName.QWEN_25_1_5B_INSTRUCT
-    system_prompt_id = FragmentID.IMDB_TEST_PROMPT
-    target_model_name: TargetModelName = TargetModelName.IMDB_TEST
-
-    run_configuration: TrainingRunConfiguration = TrainingRunConfiguration.construct_base(
-        dataset_name, "train", "text", base_model_name, target_model_name, TrainingLength(True, 1), system_prompt_id
-    )
-    print(ctxt.seed)
-    print(run_configuration.base_model_name)
+    command: CommmandProtocol = IntegrationTestCommand()
+    command.execute(ctxt)
 
 
 @app.command("verify-template")

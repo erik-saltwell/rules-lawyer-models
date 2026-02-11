@@ -3,9 +3,7 @@ from collections.abc import Callable, Mapping
 from datasets import Dataset
 from transformers import PreTrainedTokenizerBase
 
-from rules_lawyer_models.utils.model_data import ModelData, get_model_data
-from rules_lawyer_models.utils.model_name import BaseModelName
-from rules_lawyer_models.utils.text_fragments import get_fragment
+from rules_lawyer_models.utils import BaseModelName, ModelData, get_fragment, get_model_data
 
 
 def _generate_eos(tokenizer: PreTrainedTokenizerBase) -> str:

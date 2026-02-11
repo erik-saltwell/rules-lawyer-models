@@ -2,8 +2,7 @@ from typing import cast
 
 from datasets import DatasetDict, load_dataset, load_from_disk
 
-from rules_lawyer_models.utils.common_paths import CommonPaths
-from rules_lawyer_models.utils.dataset_name import DatasetName
+from rules_lawyer_models.utils import CommonPaths, DatasetName
 
 
 def load_dataset_from_hf(dataset_name: DatasetName) -> DatasetDict:

@@ -6,9 +6,7 @@ from datasets import Dataset
 from trl.trainer.sft_config import SFTConfig
 
 from rules_lawyer_models.serialization.dataset_serializer import load_dataset_from_hf
-from rules_lawyer_models.utils.dataset_name import DatasetName
-from rules_lawyer_models.utils.model_name import BaseModelName, TargetModelName
-from rules_lawyer_models.utils.text_fragments import FragmentID, get_fragment
+from rules_lawyer_models.utils import BaseModelName, DatasetName, FragmentID, TargetModelName, get_fragment
 
 from .training_options import TrainingOptions
 

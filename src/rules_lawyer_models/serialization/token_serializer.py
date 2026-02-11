@@ -3,7 +3,7 @@ from typing import cast
 
 from transformers import PreTrainedTokenizerBase
 
-from rules_lawyer_models.utils.model_name import BaseModelName
+from rules_lawyer_models.utils import BaseModelName
 
 
 def load_tokenizer_from_hf(model_id: BaseModelName) -> PreTrainedTokenizerBase:

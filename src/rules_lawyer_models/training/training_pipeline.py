@@ -12,8 +12,7 @@ from trl.trainer.sft_config import SFTConfig
 from trl.trainer.sft_trainer import SFTTrainer
 from unsloth.chat_templates import train_on_responses_only
 
-from rules_lawyer_models.training.training_options import TrainingOptions
-from rules_lawyer_models.training.training_run_configuration import TrainingRunConfiguration
+from rules_lawyer_models.training import TrainingOptions, TrainingRunConfiguration
 from rules_lawyer_models.utils import get_model_data
 
 

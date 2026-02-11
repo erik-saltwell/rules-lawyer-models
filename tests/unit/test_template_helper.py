@@ -13,8 +13,7 @@ from rules_lawyer_models.data.template_helper import (
     add_eval_column,
     add_training_column,
 )
-from rules_lawyer_models.utils.model_data import get_model_data
-from rules_lawyer_models.utils.model_name import BaseModelName
+from rules_lawyer_models.utils import BaseModelName, get_model_data
 
 # ── Constants ────────────────────────────────────────────────────
 
