@@ -94,12 +94,12 @@ class ComputeBatchSizeCommand:
 
             try:
                 trainer = create_trainer(model, tokenizer, probe_config, training_options, False)
-                ctxt.logger.report_message(f"\nProbing Batch Size: {batch_size}\n")
+                ctxt.logger.report_message(f"Probing Batch Size: {batch_size}")
                 if not probe_config.step_size.per_device_batch_size == batch_size:
                     raise ValueError(
                         f"Expected Batch Size: {batch_size}, got {probe_config.step_size.per_device_batch_size}"
                     )
-                run_training(model, tokenizer, trainer)
+                run_training(model, tokenizer, trainer, self.run_configuration, training_options)
                 last_good = batch_size
                 batch_size += 1
                 del trainer

@@ -1,8 +1,8 @@
 from __future__ import annotations
 
+import enum
 from dataclasses import dataclass
 
-from rules_lawyer_models.utils.model_name import BaseModelName
 from rules_lawyer_models.utils.text_fragments import FragmentID
 
 # Separator constants by model family
@@ -18,6 +18,21 @@ phi_instruction_seperator = "<|user|>\n"
 phi_response_seperator = "<|assistant|>\n"
 
 
+class BaseModelName(enum.StrEnum):
+    QWEN_25_14B_4BIT_BASE = "unsloth/Qwen2.5-14B-bnb-4bit"
+    QWEN_25_14B_4BIT_INSTRUCT = "unsloth/Qwen2.5-14B-Instruct-bnb-4bit"
+    QWEN_25_3B_4BIT_INSTRUCT = "unsloth/Qwen2.5-3B-Instruct-bnb-4bit"
+    QWEN_25_3B_05BIT_INSTRUCT = "unsloth/Qwen2.5-0.5B-Instruct-bnb-4bit"
+    QWEN_25_1_5B_INSTRUCT = "unsloth/Qwen2.5-1.5B-Instruct-bnb-4bit"
+    NONE = "none"
+
+
+class TargetModelName(enum.StrEnum):
+    REDDIT_RPG_POST_CLASSIFICATION = "reddit_rpg_post_classification"
+    IMDB_TEST = "imdb_sentiment_test"
+    NONE = "none"
+
+
 @dataclass(frozen=True)
 class ModelData:
     is_instruct: bool
@@ -28,6 +43,11 @@ class ModelData:
 
 
 _model_registry: dict[BaseModelName, ModelData] = {
+    BaseModelName.QWEN_25_1_5B_INSTRUCT: ModelData(
+        is_instruct=True,
+        instruction_seperator=chat_ml_instruction_seperator,
+        response_seperator=chat_ml_response_seperator,
+    ),
     BaseModelName.QWEN_25_14B_4BIT_BASE: ModelData(
         is_instruct=False,
         training_fragment_id=FragmentID.ALPACA_PROMPT_TEMPLATE,

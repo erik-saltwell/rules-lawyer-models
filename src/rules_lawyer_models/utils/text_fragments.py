@@ -10,6 +10,7 @@ class FragmentID(StrEnum):
     RPG_POST_CLASSIFICATION_PROMPT = "rpg_post_classification_prompt.md"
     ALPACA_PROMPT_TEMPLATE = "chat_template_alpaca.md"
     ALPACA_EVAL_PROMPT_TEMPLATE = "eval_template_alpaca.md"
+    IMDB_TEST_PROMPT = "imdb_test_prompt.md"
     NONE = "none"
 
 

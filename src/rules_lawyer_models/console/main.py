@@ -12,16 +12,18 @@ from dotenv import load_dotenv
 from rich.console import Console
 
 from rules_lawyer_models.commands import CommmandProtocol, VerifyTemplateData
-from rules_lawyer_models.commands.compute_batch_size import ComputeBatchSizeCommand
 from rules_lawyer_models.console.rich_logging_protocol import RichConsoleLogger
 from rules_lawyer_models.core import RunContext
 from rules_lawyer_models.training import TrainingLength
 from rules_lawyer_models.training.training_run_configuration import TrainingRunConfiguration
-from rules_lawyer_models.utils import CommonPaths
-from rules_lawyer_models.utils.dataset_name import DatasetName
-from rules_lawyer_models.utils.logging_config import configure_logging
-from rules_lawyer_models.utils.model_name import BaseModelName, TargetModelName
-from rules_lawyer_models.utils.text_fragments import FragmentID
+from rules_lawyer_models.utils import (
+    BaseModelName,
+    CommonPaths,
+    DatasetName,
+    FragmentID,
+    TargetModelName,
+    configure_logging,
+)
 
 load_dotenv()
 configure_logging()
@@ -53,48 +55,19 @@ def test() -> None:
     """Simple smoke test command."""
     console = Console()
     logger = RichConsoleLogger(console)
-    paths = CommonPaths(DatasetName.REDDIT_RPG_POST_CLASSIFICATION)
+    paths = CommonPaths(DatasetName.IMDB_TEST)
     ctxt: RunContext = RunContext(paths, logger)
 
-    dataset_name = DatasetName.REDDIT_RPG_POST_CLASSIFICATION
-    base_model_name = BaseModelName.QWEN_25_3B_05BIT_INSTRUCT
-    system_prompt_id = FragmentID.RPG_POST_CLASSIFICATION_PROMPT
-    target_model_name: TargetModelName = TargetModelName.REDDIT_RPG_POST_CLASSIFICATION
+    dataset_name = DatasetName.IMDB_TEST
+    base_model_name = BaseModelName.QWEN_25_1_5B_INSTRUCT
+    system_prompt_id = FragmentID.IMDB_TEST_PROMPT
+    target_model_name: TargetModelName = TargetModelName.IMDB_TEST
 
     run_configuration: TrainingRunConfiguration = TrainingRunConfiguration.construct_base(
         dataset_name, "train", "text", base_model_name, target_model_name, TrainingLength(True, 1), system_prompt_id
     )
-
-    # command: CommmandProtocol = VerifyTemplateData(
-    #     1, dataset_name, base_model_name, system_prompt_id, "content", "label", "text", "eval"
-    # )
-
-    # command.execute(ctxt)
-
-    # ctxt.logger.report_message(" ")
-
-    # analyze_seq_command: CommmandProtocol = AnalyzeSequenceLengths(
-    #     dataset_name, base_model_name, system_prompt_id, "content", "label", "text"
-    # )
-
-    # analyze_seq_command.execute(ctxt)
-
-    # ctxt.logger.report_message(" ")
-
-    compute_batch_command: CommmandProtocol = ComputeBatchSizeCommand(run_configuration, 200, "content", "label", 1024)
-    compute_batch_command.execute(ctxt)
-
-    # run_configuration: TrainingRunConfiguration = TrainingRunConfiguration.construct_base(
-    #     DatasetName.REDDIT_RPG_POST_CLASSIFICATION,
-    #     "train",
-    #     BaseModelName.QWEN_25_3B_05BIT_INSTRUCT,
-    #     TargetModelName.REDDIT_RPG_POST_CLASSIFICATION,
-    #     TrainingLength(True, 50),
-    #     FragmentID.RPG_POST_CLASSIFICATION_PROMPT,
-    # )
-
-    # command: ComputeBatchSizeCommand = ComputeBatchSizeCommand(run_configuration, 100, "content", "label")
-    # command.execute(ctxt)
+    print(ctxt.seed)
+    print(run_configuration.base_model_name)
 
 
 @app.command("verify-template")

@@ -1,6 +1,8 @@
 from unsloth import FastLanguageModel  # isort: skip
-from typing import cast
+import os
+from typing import Any, cast
 
+import wandb
 from transformers import (
     PreTrainedModel,
     PreTrainedTokenizerBase,
@@ -75,33 +77,25 @@ def create_trainer(
     return trainer
 
 
-def run_training(model: PreTrainedModel, tokenizer: PreTrainedTokenizerBase, trainer: SFTTrainer) -> TrainOutput:
-    training_output = trainer.train()
-    return cast(TrainOutput, training_output)
-
-
-# def run_pipeline(
-#     run_configuration: TrainingRunConfiguration,
-#     factory_settings: SettingsForTrainingOptionsFactory,
-#     ctxt: RunContext,
-# ) -> None:
-#     training_options: TrainingOptions = create_training_options(factory_settings)
-
-#     os.environ["WANDB_LOG_MODEL"] = "checkpoint"
-#     os.environ["WANDB_PROJECT"] = run_configuration.target_model_name
-
-#     wandb.login()
-#     config: dict[str, Any] = {
-#         "training_options": training_options.to_dict(),
-#         "run_configuration": run_configuration.to_dict(),
-#     }
-
-#     with wandb.init(project=run_configuration.target_model_name, config=config) as _run:
-#         model: PreTrainedModel
-#         tokenizer: PreTrainedTokenizerBase
-#         trainer: SFTTrainer
-#         model, tokenizer = load_base_model(run_configuration, training_options, run_configuration.base_model_name)
-#         trainer = create_trainer(
-#             model, tokenizer, run_configuration, training_options, True, run_configuration.target_model_name
-#         )
-#         run_training(model, tokenizer, trainer)
+def run_training(
+    model: PreTrainedModel,
+    tokenizer: PreTrainedTokenizerBase,
+    trainer: SFTTrainer,
+    run_configuration: TrainingRunConfiguration,
+    training_options: TrainingOptions,
+) -> TrainOutput:
+    wandb_config: dict[str, Any] = {}
+    training_output: TrainOutput
+    if run_configuration.evaluation_settings.evaluation_enabled:
+        os.environ["WANDB_LOG_MODEL"] = "checkpoint"
+        os.environ["WANDB_PROJECT"] = run_configuration.target_model_name
+        wandb.login()
+        wandb_config = {
+            "training_options": training_options.to_dict(),
+            "run_configuration": run_configuration.to_dict(),
+        }
+        with wandb.init(project=run_configuration.target_model_name, config=wandb_config) as _run:
+            training_output = cast(TrainOutput, trainer.train())
+    else:
+        training_output = cast(TrainOutput, trainer.train())
+    return training_output  # pyright: ignore

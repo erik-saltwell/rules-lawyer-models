@@ -129,7 +129,6 @@ class TrainingRunConfiguration:
             eval_steps=self.evaluation_settings.evaluation_steps,
             fp16_full_eval=True,  # makes eval cheaper on VRAM
             report_to="wandb" if report_to_wandb else "none",  # enable logging to W&B
-            # run_name=run_name if report_to_wandb else None,  # name of the W&B run (optional)
             load_best_model_at_end=self.evaluation_settings.load_best_model_at_end,
             metric_for_best_model=self.evaluation_settings.metric_for_best_model,
             greater_is_better=self.evaluation_settings.greater_is_better,

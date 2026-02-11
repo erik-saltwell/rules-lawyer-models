@@ -6,10 +6,7 @@ from transformers import PreTrainedTokenizerBase
 from rules_lawyer_models.core import RunContext
 from rules_lawyer_models.data import add_string_label_column, add_training_column
 from rules_lawyer_models.serialization import load_dataset_from_hf, load_tokenizer_from_hf
-from rules_lawyer_models.utils import get_fragment
-from rules_lawyer_models.utils.dataset_name import DatasetName
-from rules_lawyer_models.utils.model_name import BaseModelName
-from rules_lawyer_models.utils.text_fragments import FragmentID
+from rules_lawyer_models.utils import BaseModelName, DatasetName, FragmentID, get_fragment
 
 from .command_protocol import CommmandProtocol
 
