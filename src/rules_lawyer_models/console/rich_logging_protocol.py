@@ -7,7 +7,7 @@ from typing import Any
 from rich.console import Console
 from rich.progress import BarColumn, Progress, TaskProgressColumn, TextColumn, TimeElapsedColumn
 from rich.status import Status
-from rich.table import Table
+from rich.table import Table, box
 from rich.traceback import Traceback
 
 from rules_lawyer_models.utils.logging_protocol import LoggingProtocol, ProgressTask, StatusHandle
@@ -36,12 +36,20 @@ class RichConsoleLogger(LoggingProtocol):
         # Do NOT raise here; let the caller decide (and preserve traceback with `raise` at call site).
 
     def report_table_message(self, row_data: dict[str, Any]) -> None:
-        table = Table(show_header=True)
+        table = Table(
+            show_header=True,
+            show_lines=True,  # <-- row separators
+            box=box.SQUARE,  # optional: pick a box style that looks good with row lines
+        )
         table.add_column("Key")
         table.add_column("Value")
         for key, value in row_data.items():
             table.add_row(str(key), str(value))
         self._console.print(table)
+
+    def add_break(self, break_count: int = 1) -> None:
+        for _ in range(break_count):
+            self.report_message("")
 
     # ----- status/progress -----
 
