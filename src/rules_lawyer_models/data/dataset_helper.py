@@ -8,15 +8,16 @@ from transformers import PreTrainedTokenizerBase
 
 from rules_lawyer_models.core.run_context import RunContext
 from rules_lawyer_models.exploration.token_length import compute_tokens
-from rules_lawyer_models.utils import FragmentID, get_fragment
+from rules_lawyer_models.utils import BaseModelName, FragmentID, get_fragment
 
 if TYPE_CHECKING:
     from rules_lawyer_models.evaluation.model_generator import ModelGenerator
 
+from .template_helper import add_training_column
+
 
 def split_dataset(
-    datasets: DatasetDict,
-    dataset_name: str,
+    dataset: Dataset,
     validation_percent_of_total: float,
     test_percent_of_total: float,
     ctxt: RunContext,
@@ -45,7 +46,7 @@ def split_dataset(
 
     validation_percent_of_non_train = validation_percent_of_total / non_train_percent_of_total
 
-    train_nontrain_sets = datasets[dataset_name].train_test_split(
+    train_nontrain_sets = dataset.train_test_split(
         test_size=non_train_percent_of_total,
         stratify_by_column=stratify_by_column_name,
         seed=ctxt.seed,
@@ -264,3 +265,26 @@ def rebalance_minority_class(
         )
 
     return rebalanced
+
+
+def prep_classification_dataset_for_trainng(
+    dataset: Dataset,
+    base_model_name: BaseModelName,
+    content_column_name: str,
+    label_column_name: str,
+    string_label_column_name: str,
+    training_column_name: str,
+    system_prompt_id: FragmentID,
+    tokenizer: PreTrainedTokenizerBase,
+) -> Dataset:
+    return_set: Dataset = add_string_label_column(dataset, label_column_name, string_label_column_name)
+    return_set = add_training_column(
+        base_model_name,
+        return_set,
+        content_column_name,
+        string_label_column_name,
+        training_column_name,
+        get_fragment(system_prompt_id),
+        tokenizer,
+    )
+    return return_set

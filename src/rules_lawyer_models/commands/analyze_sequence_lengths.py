@@ -4,15 +4,14 @@ from datasets import Dataset, DatasetDict
 from transformers import PreTrainedTokenizerBase
 
 from rules_lawyer_models.core import RunContext
-from rules_lawyer_models.data import add_string_label_column
-from rules_lawyer_models.data.template_helper import add_training_column
+from rules_lawyer_models.data.dataset_helper import prep_classification_dataset_for_trainng
 from rules_lawyer_models.exploration import (
     TokenLengthData,
     analyze_token_lengths,
     get_percent_samples_within_sequence_length,
 )
 from rules_lawyer_models.serialization import load_dataset_from_hf, load_tokenizer_from_hf
-from rules_lawyer_models.utils import BaseModelName, DatasetName, FragmentID, get_fragment
+from rules_lawyer_models.utils import BaseModelName, DatasetName, FragmentID
 
 from .command_protocol import CommmandProtocol
 
@@ -33,20 +32,20 @@ class AnalyzeSequenceLengths(CommmandProtocol):
         self.content_column_name = content_column_name
         self.labels_column_name = labels_column_name
         self.training_column_name = training_column_name
+        self.string_labels_column_name = "str_" + labels_column_name
 
     def execute(self, ctxt: RunContext) -> None:
         datasets: DatasetDict = load_dataset_from_hf(self.dataset_name)
         dataset: Dataset = datasets["train"]
         tokenizer: PreTrainedTokenizerBase = load_tokenizer_from_hf(self.base_model_name)
-        string_labels_column_name = "str_" + self.labels_column_name
-        dataset = add_string_label_column(dataset, self.labels_column_name, string_labels_column_name)
-        dataset = add_training_column(
-            self.base_model_name,
+        dataset = prep_classification_dataset_for_trainng(
             dataset,
+            self.base_model_name,
             self.content_column_name,
-            string_labels_column_name,
+            self.labels_column_name,
+            self.string_labels_column_name,
             self.training_column_name,
-            get_fragment(self.system_prompt_id),
+            self.system_prompt_id,
             tokenizer,
         )
 
