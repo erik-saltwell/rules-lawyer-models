@@ -2,11 +2,9 @@ from __future__ import annotations
 
 from dataclasses import asdict, dataclass, fields
 
-from datasets import Dataset
 from trl.trainer.sft_config import SFTConfig
 
-from rules_lawyer_models.serialization.dataset_serializer import load_dataset_from_hf
-from rules_lawyer_models.utils import BaseModelName, DatasetName, FragmentID, TargetModelName, get_fragment
+from rules_lawyer_models.utils import BaseModelName, FragmentID, TargetModelName, get_fragment
 
 from .training_options import TrainingOptions
 
@@ -28,7 +26,6 @@ class TrainingLength:
 class EvalationSettings:
     evaluation_enabled: bool
     evaluation_steps: int
-    evaluation_dataset: Dataset | None
 
     @property
     def evaluation_strategy(self) -> str:
@@ -51,15 +48,15 @@ class EvalationSettings:
         return False
 
     def to_dict(self) -> dict:
-        return {f.name: getattr(self, f.name) for f in fields(self) if f.name != "evaluation_dataset"}
+        return asdict(self)
 
     @classmethod
     def from_disabled(cls) -> EvalationSettings:
-        return EvalationSettings(False, -1, None)
+        return EvalationSettings(False, -1)
 
     @classmethod
-    def from_enabled(cls, evaluation_dataset: Dataset, evaluation_steps: int) -> EvalationSettings:
-        return EvalationSettings(True, evaluation_steps, evaluation_dataset)
+    def from_enabled(cls, evaluation_steps: int) -> EvalationSettings:
+        return EvalationSettings(True, evaluation_steps)
 
 
 @dataclass
@@ -78,7 +75,6 @@ class StepSize:
 
 @dataclass(frozen=True)
 class TrainingRunConfiguration:
-    train_dataset: Dataset
     base_model_name: BaseModelName
     target_model_name: TargetModelName
     training_column_name: str
@@ -98,7 +94,7 @@ class TrainingRunConfiguration:
         return get_fragment(self.system_prompt_id)
 
     def to_dict(self) -> dict:
-        d = {f.name: getattr(self, f.name) for f in fields(self) if f.name != "train_dataset"}
+        d = {f.name: getattr(self, f.name) for f in fields(self)}
         d["step_size"] = self.step_size.to_dict()
         d["training_length"] = self.training_length.to_dict()
         d["evaluation_settings"] = self.evaluation_settings.to_dict()
@@ -130,26 +126,4 @@ class TrainingRunConfiguration:
             load_best_model_at_end=self.evaluation_settings.load_best_model_at_end,
             metric_for_best_model=self.evaluation_settings.metric_for_best_model,
             greater_is_better=self.evaluation_settings.greater_is_better,
-        )
-
-    @classmethod
-    def construct_base(
-        cls,
-        dataset_name: DatasetName,
-        split_name: str,
-        training_column_name: str,
-        base_model: BaseModelName,
-        target_model: TargetModelName,
-        length: TrainingLength,
-        prompt_id: FragmentID,
-    ) -> TrainingRunConfiguration:
-        return TrainingRunConfiguration(
-            train_dataset=load_dataset_from_hf(dataset_name)[split_name],
-            training_column_name=training_column_name,
-            base_model_name=base_model,
-            target_model_name=target_model,
-            training_length=length,
-            system_prompt_id=prompt_id,
-            evaluation_settings=EvalationSettings.from_disabled(),
-            step_size=StepSize(1024, 2, 8),
         )

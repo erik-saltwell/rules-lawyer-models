@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from datasets import Dataset, DatasetDict
+from datasets import Dataset
 from transformers import PreTrainedTokenizerBase
 
 from rules_lawyer_models.core import RunContext
@@ -32,8 +32,7 @@ class IntegrationTestCommand:
 
         tokenizer: PreTrainedTokenizerBase = load_tokenizer_from_hf(base_model_name)
 
-        dataset_dict: DatasetDict = load_dataset_from_hf(dataset_name)
-        dataset_all: Dataset = dataset_dict[split_name]
+        dataset_all: Dataset = load_dataset_from_hf(dataset_name)[split_name]
         dataset_all = prep_classification_dataset_for_trainng(
             dataset_all,
             base_model_name,
@@ -49,7 +48,11 @@ class IntegrationTestCommand:
         ctxt.logger.add_break(2)
 
         # self.analyze_sequence_length(dataset_all, tokenizer, train_column_name, ctxt)
-        # 1536 tokens only leave out 21 samples.
+        # 1536 tokens only leaves out 21 samples.
+        # stress_dataset = make_stress_split(dataset_all, 500, train_column_name, tokenizer)
+
+        # )
+        # max_batch_size: int = find_max_batch_size()
 
         return
 

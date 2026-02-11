@@ -6,7 +6,6 @@ from typing import TYPE_CHECKING, Any
 from datasets import ClassLabel, Dataset, DatasetDict, Value, concatenate_datasets
 from transformers import PreTrainedTokenizerBase
 
-from rules_lawyer_models.core.run_context import RunContext
 from rules_lawyer_models.exploration.token_length import compute_tokens
 from rules_lawyer_models.utils import BaseModelName, FragmentID, get_fragment
 
@@ -20,7 +19,7 @@ def split_dataset(
     dataset: Dataset,
     validation_percent_of_total: float,
     test_percent_of_total: float,
-    ctxt: RunContext,
+    seed: int,
     stratify_by_column_name: str | None = None,
 ) -> DatasetDict:
     """Splits a dataset into train, validation, and test sets.
@@ -49,12 +48,12 @@ def split_dataset(
     train_nontrain_sets = dataset.train_test_split(
         test_size=non_train_percent_of_total,
         stratify_by_column=stratify_by_column_name,
-        seed=ctxt.seed,
+        seed=seed,
     )
     test_val_sets = train_nontrain_sets["test"].train_test_split(
         test_size=validation_percent_of_non_train,
         stratify_by_column=stratify_by_column_name,
-        seed=ctxt.seed,
+        seed=seed,
     )
     splits = DatasetDict(
         {
@@ -287,4 +286,5 @@ def prep_classification_dataset_for_trainng(
         get_fragment(system_prompt_id),
         tokenizer,
     )
+
     return return_set

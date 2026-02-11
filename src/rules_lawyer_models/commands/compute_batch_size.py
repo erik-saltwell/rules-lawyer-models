@@ -1,5 +1,5 @@
 import logging
-from dataclasses import dataclass, replace
+from dataclasses import dataclass
 
 from datasets import Dataset
 from transformers import PreTrainedTokenizerBase
@@ -18,6 +18,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class ComputeBatchSizeCommand:
     run_configuration: TrainingRunConfiguration
+    train_dataset: Dataset
     samples_count: int
     content_column_name: str
     labels_column_name: str
@@ -27,12 +28,12 @@ class ComputeBatchSizeCommand:
         hf_logging.disable_progress_bar()
         hf_logging.set_verbosity_error()
         stress_dataset = self.create_stress_set(self.run_configuration.base_model_name)
-        self.run_configuration = replace(self.run_configuration, train_dataset=stress_dataset)
-        _best_batch_size: int = find_max_batch_size(self.run_configuration, self.max_sequence_length, ctxt)
-        # ctxt.logger.report_message(f"Max batch size: {best_batch_size}")
+        _best_batch_size: int = find_max_batch_size(
+            self.run_configuration, self.max_sequence_length, ctxt, train_dataset=stress_dataset
+        )
 
     def create_stress_set(self, base_model_name: BaseModelName) -> Dataset:
-        dataset: Dataset = self.run_configuration.train_dataset
+        dataset: Dataset = self.train_dataset
         tokenizer: PreTrainedTokenizerBase = load_tokenizer_from_hf(base_model_name)
         string_labels_column_name = "str_" + self.labels_column_name
         training_column_name = self.run_configuration.training_column_name

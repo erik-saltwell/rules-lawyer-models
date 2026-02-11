@@ -3,6 +3,7 @@ import os
 from typing import Any, cast
 
 import wandb
+from datasets import Dataset
 from transformers import (
     PreTrainedModel,
     PreTrainedTokenizerBase,
@@ -59,13 +60,15 @@ def create_trainer(
     run_configuration: TrainingRunConfiguration,
     training_options: TrainingOptions,
     report_to_wandb: bool,
+    train_dataset: Dataset,
+    eval_dataset: Dataset | None = None,
 ) -> SFTTrainer:
     config: SFTConfig = run_configuration.create_sft_config(training_options, report_to_wandb)
     trainer: SFTTrainer = SFTTrainer(
         model=model,
         processing_class=tokenizer,
-        train_dataset=run_configuration.train_dataset,
-        eval_dataset=run_configuration.evaluation_settings.evaluation_dataset,
+        train_dataset=train_dataset,
+        eval_dataset=eval_dataset,
         args=config,
     )
     if run_configuration.train_on_outputs_only:

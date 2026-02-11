@@ -2,6 +2,7 @@ from dataclasses import replace
 from enum import Enum
 
 import torch
+from datasets import Dataset
 
 from rules_lawyer_models.core.run_context import RunContext
 from rules_lawyer_models.training import (
@@ -41,6 +42,7 @@ def find_max_batch_size(
     run_configuration: TrainingRunConfiguration,
     max_sequence_length: int,
     ctxt: RunContext,
+    train_dataset: Dataset,
     strategy: BatchSizeStrategy = BatchSizeStrategy.INCREMENT_BY_1,
     starting_batch_size: int = 1,
     max_batch_size: int | None = None,
@@ -73,7 +75,7 @@ def find_max_batch_size(
         )
 
         try:
-            trainer = create_trainer(model, tokenizer, probe_config, training_options, False)
+            trainer = create_trainer(model, tokenizer, probe_config, training_options, False, train_dataset)
             ctxt.logger.report_message(f"Probing Batch Size: {batch_size}")
             if not probe_config.step_size.per_device_batch_size == batch_size:
                 raise ValueError(
