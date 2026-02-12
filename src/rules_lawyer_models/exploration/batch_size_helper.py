@@ -95,6 +95,5 @@ def find_max_batch_size(
             flush_gpu_memory()
         except torch.cuda.OutOfMemoryError:
             ctxt.logger.report_message(f"Largest succesfull batch size: {last_good}")
-            del model, tokenizer
             flush_gpu_memory()
             return last_good
