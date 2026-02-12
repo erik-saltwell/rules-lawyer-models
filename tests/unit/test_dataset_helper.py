@@ -28,21 +28,13 @@ def sample_dataset() -> DatasetDict:
     return DatasetDict({"train": ds})
 
 
-@pytest.fixture()
-def mock_ctxt() -> MagicMock:
-    ctxt = MagicMock()
-    ctxt.seed = 42
-    return ctxt
-
-
 class TestSplitDataset:
-    def test_70_20_10_split(self, sample_dataset: DatasetDict, mock_ctxt: MagicMock) -> None:
+    def test_70_20_10_split(self, sample_dataset: DatasetDict) -> None:
         splits = split_dataset(
-            datasets=sample_dataset,
-            dataset_name="train",
+            dataset=sample_dataset["train"],
             validation_percent_of_total=0.2,
             test_percent_of_total=0.1,
-            ctxt=mock_ctxt,
+            seed=42,
         )
 
         total = len(sample_dataset["train"])
@@ -55,13 +47,12 @@ class TestSplitDataset:
         # All rows accounted for, no duplicates
         assert len(splits["train"]) + len(splits["validation"]) + len(splits["test"]) == total
 
-    def test_stratify_preserves_class_distribution(self, sample_dataset: DatasetDict, mock_ctxt: MagicMock) -> None:
+    def test_stratify_preserves_class_distribution(self, sample_dataset: DatasetDict) -> None:
         splits = split_dataset(
-            datasets=sample_dataset,
-            dataset_name="train",
+            dataset=sample_dataset["train"],
             validation_percent_of_total=0.2,
             test_percent_of_total=0.1,
-            ctxt=mock_ctxt,
+            seed=42,
             stratify_by_column_name="data_type",
         )
 
