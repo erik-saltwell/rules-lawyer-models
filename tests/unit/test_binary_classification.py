@@ -161,38 +161,43 @@ class TestMCC:
 class TestComputeClassificationMetric:
     @patch("rules_lawyer_models.evaluation.binary_classification._collect_classifications")
     def test_delegates_to_collect_and_aggregate(self, mock_collect: MagicMock) -> None:
-        """Verify compute_classification_metric wires _collect_classifications to the aggregator."""
+        """Verify compute_classification_metric wires _collect_classifications to the aggregators."""
         mock_collect.return_value = STANDARD
         dataset = MagicMock()
 
-        result = compute_classification_metric(
+        results = compute_classification_metric(
             dataset,
             "input",
             "ground_truth",
             "predictions",
             "positive",
-            accuracy,
+            [accuracy],
         )
 
         mock_collect.assert_called_once_with(dataset, "input", "ground_truth", "predictions", "positive")
-        assert result.metric_name == "accuracy"
-        assert result.metric_result == pytest.approx(130 / 160)
+        assert len(results) == 1
+        assert results[0].metric_name == "accuracy"
+        assert results[0].metric_result == pytest.approx(130 / 160)
 
     @patch("rules_lawyer_models.evaluation.binary_classification._collect_classifications")
-    def test_with_f1_aggregator(self, mock_collect: MagicMock) -> None:
+    def test_with_multiple_aggregators(self, mock_collect: MagicMock) -> None:
         counts = _make_counts(tp=40, fp=10, tn=30, fn=20)
         mock_collect.return_value = counts
 
-        result = compute_classification_metric(
+        results = compute_classification_metric(
             MagicMock(),
             "input",
             "ground_truth",
             "predictions",
             "positive",
-            f1_score,
+            [accuracy, f1_score],
         )
+
+        assert len(results) == 2
+        assert results[0].metric_name == "accuracy"
+        assert results[0].metric_result == pytest.approx(70 / 100)
 
         p = 40 / 50
         r = 40 / 60
-        assert result.metric_name == "f1"
-        assert result.metric_result == pytest.approx((2 * p * r) / (p + r))
+        assert results[1].metric_name == "f1"
+        assert results[1].metric_result == pytest.approx((2 * p * r) / (p + r))

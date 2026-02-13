@@ -239,3 +239,5 @@ __marimo__/
 inputs/
 outputs/
 wandb/
+imdb_sentiment_test/
+reddit_rpg_post_classification/

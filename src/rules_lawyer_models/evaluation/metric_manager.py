@@ -6,6 +6,7 @@ from datasets import Dataset
 from transformers import PreTrainedModel, PreTrainedTokenizerBase
 
 from rules_lawyer_models.data.dataset_helper import add_predictions_column
+from rules_lawyer_models.utils.logging_protocol import LoggingProtocol
 from rules_lawyer_models.utils.text_fragments import FragmentID
 
 from .metric_protocol import MetricProtocol
@@ -16,8 +17,9 @@ from .model_generator import ModelGenerator
 class MetricsManager:
     """Registry of MetricProtocol instances with a method to compute all of them."""
 
-    def __init__(self, metrics: Iterable[MetricProtocol] = ()) -> None:
+    def __init__(self, metrics: Iterable[MetricProtocol] = (), *, logger: LoggingProtocol) -> None:
         self._metrics: list[MetricProtocol] = list(metrics)
+        self._logger = logger
 
     def register(self, metric: MetricProtocol) -> None:
         self._metrics.append(metric)
@@ -49,7 +51,7 @@ class MetricsManager:
             max_new_tokens: Maximum tokens to generate per row.
 
         Returns:
-            A list of MetricResult, one per registered metric.
+            A list of MetricResult from all registered metrics.
         """
         generator = ModelGenerator(model, tokenizer, clean_prediction, max_new_tokens)
         dataset_with_predictions = add_predictions_column(
@@ -58,5 +60,11 @@ class MetricsManager:
             content_column_name,
             predictions_column_name,
             generator,
+            logger=self._logger,
         )
-        return [metric.compute_metric(dataset_with_predictions) for metric in self._metrics]
+        results: list[MetricResult] = []
+        with self._logger.progress("Calculating metrics", total=len(self._metrics)) as progress:
+            for metric in self._metrics:
+                results.extend(metric.compute_metric(dataset_with_predictions))
+                progress.advance()
+        return results

@@ -8,6 +8,7 @@ from transformers import PreTrainedTokenizerBase
 
 from rules_lawyer_models.exploration.token_length import compute_tokens
 from rules_lawyer_models.utils import BaseModelName, FragmentID, get_fragment
+from rules_lawyer_models.utils.logging_protocol import LoggingProtocol
 
 if TYPE_CHECKING:
     from rules_lawyer_models.evaluation.model_generator import ModelGenerator
@@ -181,6 +182,7 @@ def add_predictions_column(
     content_column_name: str,
     predictions_column_name: str,
     generator: ModelGenerator,
+    logger: LoggingProtocol | None = None,
 ) -> Dataset:
     """Generate a prediction for every row and add it as a new column.
 
@@ -190,12 +192,21 @@ def add_predictions_column(
         content_column_name: Column containing the user input text.
         predictions_column_name: Name of the new column to create.
         generator: A ModelGenerator configured for inference.
+        logger: Optional logger for progress reporting.
 
     Returns:
         A new Dataset with the predictions column appended.
     """
     system_prompt = get_fragment(system_prompt_id)
-    predictions = [generator.generate(system_prompt, text) for text in dataset[content_column_name]]
+    texts = dataset[content_column_name]
+    if logger is not None:
+        predictions: list[str] = []
+        with logger.progress("Generating predictions", total=len(texts)) as progress:
+            for text in texts:
+                predictions.append(generator.generate(system_prompt, text))
+                progress.advance()
+    else:
+        predictions = [generator.generate(system_prompt, text) for text in texts]
     return dataset.add_column(predictions_column_name, predictions)  # pyright: ignore
 
 

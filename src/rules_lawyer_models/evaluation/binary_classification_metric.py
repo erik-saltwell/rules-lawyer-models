@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 
 from datasets import Dataset
@@ -20,9 +20,9 @@ class BinaryClassificationMetric:
     ground_truth_column_name: str
     predictions_column_name: str
     positive_class: str
-    aggregate_predictions: Callable[[dict[BinaryClassificationResult, int]], MetricResult]
+    aggregate_predictions: Sequence[Callable[[dict[BinaryClassificationResult, int]], MetricResult]]
 
-    def compute_metric(self, dataset: Dataset) -> MetricResult:
+    def compute_metric(self, dataset: Dataset) -> list[MetricResult]:
         return compute_classification_metric(
             dataset,
             self.inputs_column_name,

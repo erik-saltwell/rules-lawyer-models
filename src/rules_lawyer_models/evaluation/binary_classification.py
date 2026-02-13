@@ -1,4 +1,4 @@
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from enum import IntEnum, auto
 from typing import Any, cast
 
@@ -59,8 +59,8 @@ def compute_classification_metric(
     ground_truth_column_name: str,
     predictions_column_name: str,
     positive_class: str,
-    aggregate_predictions: Callable[[dict[BinaryClassificationResult, int]], MetricResult],
-) -> MetricResult:
+    aggregate_predictions: Sequence[Callable[[dict[BinaryClassificationResult, int]], MetricResult]],
+) -> list[MetricResult]:
     classifications: dict[BinaryClassificationResult, int] = _collect_classifications(
         dataset,
         inputs_column_name,
@@ -68,8 +68,7 @@ def compute_classification_metric(
         predictions_column_name,
         positive_class,
     )
-    result: MetricResult = aggregate_predictions(classifications)
-    return result
+    return [agg(classifications) for agg in aggregate_predictions]
 
 
 _C = dict[BinaryClassificationResult, int]

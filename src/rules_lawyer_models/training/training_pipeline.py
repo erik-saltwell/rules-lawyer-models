@@ -1,10 +1,8 @@
 from rules_lawyer_models.utils.model_data import BaseModelName
 
 from unsloth import FastLanguageModel  # isort: skip
-import os
-from typing import Any, cast
+from typing import cast
 
-import wandb
 from datasets import Dataset
 from transformers import (
     PreTrainedModel,
@@ -90,18 +88,5 @@ def run_training(
     run_configuration: TrainingRunConfiguration,
     training_options: TrainingOptions,
 ) -> TrainOutput:
-    wandb_config: dict[str, Any] = {}
-    training_output: TrainOutput
-    if run_configuration.evaluation_settings.evaluation_enabled:
-        os.environ["WANDB_LOG_MODEL"] = "checkpoint"
-        os.environ["WANDB_PROJECT"] = run_configuration.target_model_name
-        wandb.login()
-        wandb_config = {
-            "training_options": training_options.to_dict(),
-            "run_configuration": run_configuration.to_dict(),
-        }
-        with wandb.init(project=run_configuration.target_model_name, config=wandb_config) as _run:
-            training_output = cast(TrainOutput, trainer.train())
-    else:
-        training_output = cast(TrainOutput, trainer.train())
+    training_output = cast(TrainOutput, trainer.train())
     return training_output  # pyright: ignore
