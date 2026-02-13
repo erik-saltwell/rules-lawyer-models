@@ -171,11 +171,10 @@ class TestComputeClassificationMetric:
             "ground_truth",
             "predictions",
             "positive",
-            str.strip,
             accuracy,
         )
 
-        mock_collect.assert_called_once_with(dataset, "input", "ground_truth", "predictions", "positive", str.strip)
+        mock_collect.assert_called_once_with(dataset, "input", "ground_truth", "predictions", "positive")
         assert result.metric_name == "accuracy"
         assert result.metric_result == pytest.approx(130 / 160)
 
@@ -190,7 +189,6 @@ class TestComputeClassificationMetric:
             "ground_truth",
             "predictions",
             "positive",
-            str.strip,
             f1_score,
         )
 

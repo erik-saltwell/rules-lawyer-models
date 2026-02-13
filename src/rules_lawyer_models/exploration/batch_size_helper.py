@@ -7,9 +7,9 @@ from datasets import Dataset
 from rules_lawyer_models.core.run_context import RunContext
 from rules_lawyer_models.training import (
     EvalationSettings,
-    SettingsForTrainingOptionsFactory,
     StepSize,
     TrainingLength,
+    TrainingMetaOptions,
     TrainingOptions,
     TrainingRunConfiguration,
     create_trainer,
@@ -47,7 +47,7 @@ def find_max_batch_size(
     starting_batch_size: int = 1,
     max_batch_size: int | None = None,
 ) -> int:
-    factory_settings = SettingsForTrainingOptionsFactory.get_simple_default()
+    factory_settings = TrainingMetaOptions.get_simple_default()
     training_options: TrainingOptions = factory_settings.to_training_options()
     model, tokenizer = load_base_model(run_configuration, training_options, run_configuration.base_model_name)
 

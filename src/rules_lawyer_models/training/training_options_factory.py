@@ -6,7 +6,7 @@ from rules_lawyer_models.training.training_options import TrainingOptions
 
 
 @dataclass
-class SettingsForTrainingOptionsFactory:
+class TrainingMetaOptions:
     rank: int
     alpha_multiplier: int
     use_projection_modules: bool
@@ -23,7 +23,7 @@ class SettingsForTrainingOptionsFactory:
     def to_training_options(self) -> TrainingOptions:
         return TrainingOptions(
             r=self.rank,
-            target_modules=SettingsForTrainingOptionsFactory._get_training_modules(self.use_projection_modules),
+            target_modules=TrainingMetaOptions._get_training_modules(self.use_projection_modules),
             lora_alpha=self.rank * self.alpha_multiplier,
             lora_dropout=self.lora_dropout,
             use_rslora=(self.rank > 16),
@@ -56,14 +56,14 @@ class SettingsForTrainingOptionsFactory:
         return training_modules
 
     @classmethod
-    def from_dict(cls, data: dict) -> SettingsForTrainingOptionsFactory:
+    def from_dict(cls, data: dict) -> TrainingMetaOptions:
         field_names = {f.name for f in fields(cls)}
         filtered = {k: v for k, v in data.items() if k in field_names}
         return cls(**filtered)
 
     @classmethod
-    def get_simple_default(cls) -> SettingsForTrainingOptionsFactory:
-        return SettingsForTrainingOptionsFactory(
+    def get_simple_default(cls) -> TrainingMetaOptions:
+        return TrainingMetaOptions(
             rank=16,
             alpha_multiplier=1,
             use_projection_modules=True,
@@ -95,7 +95,7 @@ class SettingsForTrainingOptionsFactory:
         }
 
 
-def create_training_options(factory_settings: SettingsForTrainingOptionsFactory) -> TrainingOptions:
+def create_training_options(factory_settings: TrainingMetaOptions) -> TrainingOptions:
     return factory_settings.to_training_options()
 
 

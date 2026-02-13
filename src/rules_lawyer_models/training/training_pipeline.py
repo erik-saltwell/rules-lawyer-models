@@ -1,3 +1,5 @@
+from rules_lawyer_models.utils.model_data import BaseModelName
+
 from unsloth import FastLanguageModel  # isort: skip
 import os
 from typing import Any, cast
@@ -22,7 +24,7 @@ from .training_run_configuration import TrainingRunConfiguration
 def load_base_model(
     run_configuration: TrainingRunConfiguration,
     training_options: TrainingOptions,
-    base_model_name: str,
+    base_model_name: BaseModelName,
 ) -> tuple[PreTrainedModel, PreTrainedTokenizerBase]:
     model: PreTrainedModel
     tokenizer: PreTrainedTokenizerBase
