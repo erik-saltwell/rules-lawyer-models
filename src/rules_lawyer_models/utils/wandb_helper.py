@@ -1,7 +1,8 @@
 import os
 
 import wandb
-from rules_lawyer_models.training import TrainingOptions, TrainingRunConfiguration
+from rules_lawyer_models.training.training_options import TrainingOptions
+from rules_lawyer_models.training.training_run_configuration import TrainingRunConfiguration
 
 
 def initialize_wandb(run_configuration: TrainingRunConfiguration, training_options: TrainingOptions) -> wandb.Run:

@@ -11,7 +11,7 @@ import typer
 from dotenv import load_dotenv
 from rich.console import Console
 
-from rules_lawyer_models.commands import CommmandProtocol, VerifyTemplateData
+from rules_lawyer_models.commands import CommmandProtocol, SweepCommand, VerifyTemplateData
 from rules_lawyer_models.commands.integration_test_command import IntegrationTestCommand
 from rules_lawyer_models.console.rich_logging_protocol import RichConsoleLogger
 from rules_lawyer_models.core import RunContext
@@ -73,6 +73,21 @@ def verify_template() -> None:
     command: CommmandProtocol = VerifyTemplateData(
         1, dataset_name, base_model_name, system_prompt_id, "content", "label", "text", "eval"
     )
+    command.execute(ctxt)
+
+
+@app.command("sweep")
+def sweep(
+    count: int = typer.Option(5, "--count", "-n", help="Number of sweep trials to run."),
+    method: str = typer.Option("random", "--method", "-m", help="Sweep method: random, grid, or bayes."),
+) -> None:
+    """Run a W&B hyperparameter sweep."""
+    console = Console()
+    logger = RichConsoleLogger(console)
+    paths = CommonPaths(DatasetName.IMDB_TEST)
+    ctxt: RunContext = RunContext(paths, logger)
+
+    command: CommmandProtocol = SweepCommand(sweep_count=count, sweep_method=method)
     command.execute(ctxt)
 
 

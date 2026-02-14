@@ -2,22 +2,11 @@ from dataclasses import dataclass
 
 from datasets import Dataset, DatasetDict
 from transformers import PreTrainedTokenizerBase
-from trl.trainer.sft_trainer import SFTTrainer
 
 from rules_lawyer_models.core import RunContext
 from rules_lawyer_models.data.dataset_helper import (
     prep_classification_dataset_for_trainng,
     split_dataset,
-)
-from rules_lawyer_models.evaluation import (
-    BinaryClassificationMetric,
-    LoggerMetricsReporter,
-    MetricsManager,
-    MetricsReportingManager,
-    WandbMetricsReporter,
-    accuracy,
-    f1_score,
-    precision,
 )
 from rules_lawyer_models.exploration import (
     TokenLengthData,
@@ -31,11 +20,10 @@ from rules_lawyer_models.training import (
     TrainingLength,
     TrainingMetaOptions,
     TrainingRunConfiguration,
-    create_trainer,
-    load_base_model,
-    run_training,
 )
 from rules_lawyer_models.utils import BaseModelName, DatasetName, FragmentID, TargetModelName, initialize_wandb
+
+from .trial_runner import run_single_trial
 
 
 @dataclass
@@ -104,54 +92,17 @@ class IntegrationTestCommand:
         dataset_dict: DatasetDict = split_dataset(dataset_all, 0.1, 0.1, run_configuration.seed, label_column_name)
 
         with initialize_wandb(run_configuration=run_configuration, training_options=training_options) as _wandb:
-            model, tokenizer = load_base_model(run_configuration, training_options, base_model_name)
-
-            trainer: SFTTrainer = create_trainer(
-                model,
-                tokenizer,
-                run_configuration,
-                training_options,
-                True,
-                dataset_dict["train"],
-                dataset_dict["validation"],
+            run_single_trial(
+                meta_options=meta_options,
+                run_configuration=run_configuration,
+                dataset_dict=dataset_dict,
+                ctxt=ctxt,
+                content_column_name=content_column_name,
+                str_label_column_name=str_label_column_name,
+                predictions_column_name=predictions_column_name,
+                positive_class="pos",
+                clean_prediction_fn=lambda text: "pos" if "pos" in text.lower() else "neg",
             )
-            run_training(model, tokenizer, trainer, run_configuration, training_options)
-
-            def clean_prediction(text: str) -> str:
-                return "pos" if "pos" in text.lower() else "neg"
-
-            positive_class = "pos"
-            metrics_manager = MetricsManager(
-                [
-                    BinaryClassificationMetric(
-                        inputs_column_name=content_column_name,
-                        ground_truth_column_name=str_label_column_name,
-                        predictions_column_name=predictions_column_name,
-                        positive_class=positive_class,
-                        aggregate_predictions=[accuracy, precision, f1_score],
-                    ),
-                ],
-                logger=ctxt.logger,
-            )
-
-            results = metrics_manager.calculate_metrics(
-                dataset_dict["test"],
-                model,
-                tokenizer,
-                system_prompt_id,
-                content_column_name,
-                predictions_column_name,
-                clean_prediction,
-                max_new_tokens=10,
-            )
-
-            reporting_manager = MetricsReportingManager(
-                [
-                    LoggerMetricsReporter(ctxt.logger),
-                    WandbMetricsReporter(),
-                ]
-            )
-            reporting_manager.report(results)
 
     def create_training_meta_options(self) -> TrainingMetaOptions:
         meta_options: TrainingMetaOptions = TrainingMetaOptions(

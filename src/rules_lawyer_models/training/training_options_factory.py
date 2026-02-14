@@ -76,19 +76,18 @@ class TrainingMetaOptions:
         )
 
     @classmethod
-    def get_default_sweep_config(cls):
+    def get_default_sweep_config(cls, metric_name: str = "f1", metric_goal: str = "maximize"):
         return {
-            "program": "unset",
             "method": "random",
-            "metric": {"goal": "minimize", "name": "f1"},
+            "metric": {"goal": metric_goal, "name": metric_name},
             "parameters": {
-                "rank": [8, 16, 32],
-                "alpha_multiplier": [1, 2],
-                "use_projection_modules": [True, False],
-                "warmup_ratio": [0.05, 0.1],
-                "lr_schedular_type": ["linear", "cosine"],
-                "optim": ["adamw_8bit", "sgd"],
-                "learning_rate": {"distribution": "log_uniform", "min": 5e-5, "max": 2e-3},
+                "rank": {"values": [8, 16, 32]},
+                "alpha_multiplier": {"values": [1, 2]},
+                "use_projection_modules": {"values": [True, False]},
+                "warmup_ratio": {"values": [0.05, 0.1]},
+                "lr_schedular_type": {"values": ["linear", "cosine"]},
+                "optim": {"values": ["adamw_8bit", "sgd"]},
+                "learning_rate": {"distribution": "log_uniform_values", "min": 5e-5, "max": 2e-3},
                 "lora_dropout": {"distribution": "uniform", "min": 0, "max": 0.1},
                 "weight_decay": {"distribution": "uniform", "min": 0.01, "max": 0.1},
             },
