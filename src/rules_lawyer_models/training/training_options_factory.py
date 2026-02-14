@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass, fields
+from typing import Any
 
 from rules_lawyer_models.training.training_options import TrainingOptions
 
@@ -76,7 +77,7 @@ class TrainingMetaOptions:
         )
 
     @classmethod
-    def get_default_sweep_config(cls, metric_name: str = "f1", metric_goal: str = "maximize"):
+    def get_default_sweep_config(cls, metric_name: str = "f1", metric_goal: str = "maximize") -> dict[str, Any]:
         return {
             "method": "random",
             "metric": {"goal": metric_goal, "name": metric_name},

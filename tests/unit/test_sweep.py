@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import fields
+from typing import Any
 
 import pytest
 
@@ -11,7 +12,7 @@ from rules_lawyer_models.training.training_options_factory import TrainingMetaOp
 
 class TestGetDefaultSweepConfig:
     @pytest.fixture()
-    def sweep_config(self) -> dict:
+    def sweep_config(self) -> dict[str, Any]:
         return TrainingMetaOptions.get_default_sweep_config()
 
     def test_has_required_top_level_keys(self, sweep_config: dict) -> None:
